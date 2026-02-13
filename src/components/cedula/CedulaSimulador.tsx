@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ColumnaElectoral } from "./ColumnaElectoral";
 import { ResultadoVoto } from "./ResultadoVoto";
 import { useCedula } from "@/hooks/useCedula";
 import { CONFIG_COLUMNAS } from "@/lib/cedula-logic";
 import { DATOS_SIMULADOR } from "@/lib/mock-data";
+import { initSesion, registrarIntencionVoto } from "@/lib/analytics";
 import type { VotoCedula } from "@/lib/types";
 
 const DATOS = DATOS_SIMULADOR;
@@ -56,9 +57,48 @@ export function CedulaSimulador() {
   // Tab activo en móvil (0 = Presidencial, ..., 4 = Parlamento Andino)
   const [tabActivo, setTabActivo] = useState(0);
 
+  // Iniciar sesión anónima al montar el simulador
+  useEffect(() => {
+    initSesion()
+  }, [])
+
   const handleValidar = () => {
     validar();
     setMostrarResultado(true);
+
+    // Capturar intención de voto — fire and forget, no bloquea UI
+    const selecciones: Parameters<typeof registrarIntencionVoto>[1] = {}
+    // Fórmula presidencial (número = id de lista directamente)
+    if (voto.formulaPresidencial !== undefined) {
+      const lista = DATOS.formulasPresidenciales.find(
+        f => f.id === voto.formulaPresidencial
+      )
+      if (lista) {
+        selecciones["formulaPresidencial"] = {
+          nombreOrganizacion: lista.organizacion.nombre,
+          idOrganizacion:     lista.organizacion.id,
+          esBlanco: false, esNulo: false, esValido: true,
+        }
+      }
+    }
+    // Columnas con SeleccionColumna (idLista + preferencias)
+    ;(["senadorNacional", "senadorRegional", "diputado", "parlamentoAndino"] as ColumnaKey[])
+      .forEach(key => {
+        const sel = voto[key]
+        if (!sel) return
+        const lista = COLUMNA_DATOS[key]?.find(l => l.id === sel.idLista)
+        if (lista) {
+          selecciones[key] = {
+            nombreOrganizacion: lista.organizacion.nombre,
+            idOrganizacion:     lista.organizacion.id,
+            esBlanco: false, esNulo: false, esValido: true,
+          }
+        }
+      })
+    if (Object.keys(selecciones).length > 0 && resultado) {
+      registrarIntencionVoto(resultado, selecciones)
+    }
+
     setTimeout(() => {
       document.getElementById("resultado-voto")?.scrollIntoView({
         behavior: "smooth",

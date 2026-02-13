@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
 import { CedulaSimulador } from "@/components/cedula/CedulaSimulador";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://votoseguro-web.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Simulador de Cédula — Voto Seguro 2026",
+  title: "Simulador de Cédula",
   description:
     "Practica tu voto para las Elecciones Generales 2026. Simula la cédula con 5 columnas: Presidencial, Senadores Nacionales, Senadores Regionales, Diputados y Parlamento Andino.",
+  alternates: {
+    canonical: `${APP_URL}/simulador`,
+  },
+  openGraph: {
+    title: "Simulador de Cédula Electoral — Voto Seguro 2026",
+    description:
+      "Practica las 5 columnas de la cédula: Presidencial, Senadores, Diputados y Parlamento Andino. Gratis y sin registro.",
+    url: `${APP_URL}/simulador`,
+  },
 };
 
 export default function SimuladorPage() {
