@@ -1,0 +1,112 @@
+// ============================================================
+// Voto Seguro 2026 — TypeScript Types Electorales
+// Basado en Ley Orgánica de Elecciones N° 26859 y ONPE
+// ============================================================
+
+// --- Tipos base ---
+
+export type EstadoVoto = "valido" | "nulo" | "blanco" | "impugnado";
+
+export type TipoCargo =
+  | "FORMULA_PRESIDENCIAL"
+  | "SENADOR_NACIONAL"
+  | "SENADOR_REGIONAL"
+  | "DIPUTADO"
+  | "PARLAMENTO_ANDINO";
+
+export type EstadoCandidato = "INSCRITO" | "ADMITIDO" | "EXCLUIDO" | "IMPUGNADO";
+
+// --- Organizaciones políticas ---
+
+export interface OrganizacionPolitica {
+  id: number;
+  nombre: string;
+  sigla: string;
+  colorPrimario: string;
+  colorSecundario?: string;
+  logoUrl?: string;
+  numeroLista: number; // número asignado en la cédula
+}
+
+// --- Candidatos ---
+
+export interface Candidato {
+  idHojaVida: number;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno: string;
+  nombreCompleto: string;
+  cargo: TipoCargo;
+  numeroCandidato: number; // número en la lista (para voto preferencial)
+  fotoUrl?: string;
+  idOrganizacion: number;
+  estado: EstadoCandidato;
+  // Datos adicionales para perfil
+  departamento?: string;
+  partido?: string;
+}
+
+// --- Listas electorales ---
+
+export interface ListaElectoral {
+  id: number;
+  organizacion: OrganizacionPolitica;
+  cargo: TipoCargo;
+  candidatos: Candidato[];
+  // Para fórmula presidencial
+  presidente?: Candidato;
+  vicepresidente1?: Candidato;
+  vicepresidente2?: Candidato;
+}
+
+// --- Estado de selección por columna ---
+
+export interface SeleccionColumna {
+  idLista: number;
+  preferencias: number[]; // números de orden de los candidatos preferidos
+}
+
+// --- Estado completo de la cédula ---
+
+export interface VotoCedula {
+  formulaPresidencial?: number; // id de la lista seleccionada
+  senadorNacional?: SeleccionColumna; // max 2 preferenciales
+  senadorRegional?: SeleccionColumna; // max 1 preferencial
+  diputado?: SeleccionColumna; // max 2 preferenciales
+  parlamentoAndino?: SeleccionColumna; // max 2 preferenciales
+}
+
+// --- Resultado de validación ---
+
+export interface ResultadoColumna {
+  estado: EstadoVoto;
+  motivo?: string;
+}
+
+export interface ResultadoCedula {
+  estado: EstadoVoto;
+  columnas: Partial<Record<keyof Omit<VotoCedula, "formulaPresidencial">, ResultadoColumna>>;
+  formulaPresidencial?: ResultadoColumna;
+  motivos: string[];
+  resumen: string;
+}
+
+// --- Configuración de columna ---
+
+export interface ConfigColumna {
+  tipo: TipoCargo;
+  titulo: string;
+  subtitulo: string;
+  maxPreferenciales: number;
+  descripcionVoto: string;
+}
+
+// --- Datos del simulador ---
+
+export interface DatosSimulador {
+  formulasPresidenciales: ListaElectoral[];
+  senadoresNacionales: ListaElectoral[];
+  senadoresRegionales: ListaElectoral[];
+  diputados: ListaElectoral[];
+  parlamentoAndino: ListaElectoral[];
+}
