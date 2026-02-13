@@ -44,7 +44,7 @@ export default function HomePage() {
           </div>
 
           {/* Stats rápidos */}
-          <div className="grid grid-cols-3 gap-6 mt-12 max-w-lg mx-auto">
+          <div className="grid grid-cols-3 gap-3 sm:gap-6 mt-8 sm:mt-12 max-w-lg mx-auto">
             <div className="text-center">
               <div className="text-3xl font-black text-yellow-300">5</div>
               <div className="text-xs text-red-200 mt-1">columnas en la cédula</div>
@@ -75,7 +75,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {[
               {
                 num: "1",

@@ -24,7 +24,7 @@ export default function SimuladorPage() {
       </div>
 
       {/* Instrucciones rápidas */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6 max-w-3xl mx-auto">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5 max-w-3xl mx-auto">
         {[
           { paso: "1", texto: "Selecciona un partido en cada columna" },
           { paso: "2", texto: "Opcionalmente escoge candidatos preferidos" },

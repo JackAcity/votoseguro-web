@@ -84,7 +84,7 @@ export function FilaPartido({
           <p className="text-[9px] text-gray-500 mb-1">
             Voto preferencial (opcional — máx. {maxPreferenciales}):
           </p>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-1">
             {lista.candidatos.slice(0, 8).map((candidato) => {
               const seleccionado = prefs.includes(candidato.numeroCandidato);
               const puedeAgregar = prefs.length < maxPreferenciales || seleccionado;
@@ -97,20 +97,20 @@ export function FilaPartido({
                   disabled={!puedeAgregar && !seleccionado}
                   aria-pressed={seleccionado}
                   className={`
-                    flex items-center gap-1.5 text-left rounded px-1 py-0.5
-                    transition-colors text-[10px]
+                    flex items-center gap-2 text-left rounded px-2 py-2
+                    transition-colors text-[11px] min-h-[44px]
                     ${seleccionado
                       ? "bg-yellow-200 text-gray-800 font-semibold"
                       : puedeAgregar
-                      ? "hover:bg-yellow-100 text-gray-600 cursor-pointer"
+                      ? "hover:bg-yellow-100 text-gray-600 cursor-pointer active:bg-yellow-200"
                       : "text-gray-400 cursor-not-allowed opacity-50"
                     }
                   `}
                 >
                   <span
                     className={`
-                      w-5 h-5 flex items-center justify-center rounded-sm text-[9px] font-bold shrink-0
-                      border
+                      w-7 h-7 flex items-center justify-center rounded-sm text-[11px] font-bold shrink-0
+                      border-2
                       ${seleccionado
                         ? "bg-yellow-400 border-yellow-500 text-gray-900"
                         : "bg-white border-gray-300 text-gray-600"
@@ -119,7 +119,7 @@ export function FilaPartido({
                   >
                     {candidato.numeroCandidato}
                   </span>
-                  <span className="leading-tight">
+                  <span className="leading-tight line-clamp-2">
                     {candidato.nombres} {candidato.apellidoPaterno}
                   </span>
                 </button>

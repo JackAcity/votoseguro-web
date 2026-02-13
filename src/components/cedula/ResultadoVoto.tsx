@@ -60,13 +60,13 @@ export function ResultadoVoto({
   return (
     <div className={`rounded-lg border-2 p-4 ${config.color}`}>
       {/* Header */}
-      <div className="flex items-center gap-3 mb-3">
-        <span className="text-3xl">{config.emoji}</span>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-3">
+        <span className="text-3xl leading-none">{config.emoji}</span>
         <div>
-          <span className={`font-black text-lg uppercase ${config.titleColor}`}>
+          <span className={`font-black text-base sm:text-lg uppercase ${config.titleColor}`}>
             {config.label}
           </span>
-          <p className="text-sm text-gray-600 mt-0.5">{resultado.resumen}</p>
+          <p className="text-xs sm:text-sm text-gray-600 mt-0.5 leading-relaxed">{resultado.resumen}</p>
         </div>
       </div>
 

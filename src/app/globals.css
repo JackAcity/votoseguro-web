@@ -17,6 +17,17 @@
   }
 }
 
+/* Ocultar scrollbar manteniendo funcionalidad de scroll */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @layer components {
   .cedula-grid {
     display: grid;

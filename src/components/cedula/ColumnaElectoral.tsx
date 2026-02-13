@@ -13,6 +13,7 @@ interface ColumnaElectoralProps {
   listas: ListaElectoral[];
   seleccion: SeleccionColumna | number | undefined;
   onSeleccionarLista: (idLista: number) => void;
+  className?: string;
   onTogglePreferencial?: (numeroCandidato: number) => void;
   esFormula?: boolean;
 }
@@ -24,6 +25,7 @@ export function ColumnaElectoral({
   onSeleccionarLista,
   onTogglePreferencial,
   esFormula = false,
+  className = "",
 }: ColumnaElectoralProps) {
   const seleccionColumna = esFormula
     ? undefined
@@ -31,7 +33,7 @@ export function ColumnaElectoral({
   const seleccionFormula = esFormula ? (seleccion as number | undefined) : undefined;
 
   return (
-    <div className="flex flex-col border border-gray-400 bg-white min-w-0">
+    <div className={`flex flex-col border border-gray-400 bg-white min-w-0 ${className}`}>
       {/* Encabezado de columna */}
       <div className="bg-gray-800 text-white px-2 py-1.5 text-center">
         <h3 className="text-[11px] font-bold uppercase leading-tight tracking-wide">
