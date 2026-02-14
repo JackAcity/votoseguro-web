@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { CedulaSimulador } from "@/components/cedula/CedulaSimulador";
+import { SelectorDepartamento } from "@/components/cedula/SelectorDepartamento";
+import { getDatosSimulador } from "@/lib/candidatos-service";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://votoseguro-web.vercel.app";
 
@@ -18,7 +20,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SimuladorPage() {
+// Revalidar cada hora — los datos de candidatos no cambian frecuentemente
+export const revalidate = 3600;
+
+export default async function SimuladorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ dep?: string }>;
+}) {
+  const { dep } = await searchParams;
+
+  // Fetch server-side — datos reales de Supabase
+  // dep viene de la URL como cadena (ej: "LIMA", "SAN MARTÍN" ya decodificado por Next.js)
+  const datos = await getDatosSimulador(dep);
+
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-6">
       {/* Header de página */}
@@ -37,9 +52,9 @@ export default function SimuladorPage() {
       {/* Instrucciones rápidas */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5 max-w-3xl mx-auto">
         {[
-          { paso: "1", texto: "Selecciona un partido en cada columna" },
-          { paso: "2", texto: "Opcionalmente escoge candidatos preferidos" },
-          { paso: "3", texto: "Puedes votar distinto en cada columna" },
+          { paso: "1", texto: "Elige tu departamento" },
+          { paso: "2", texto: "Selecciona un partido en cada columna" },
+          { paso: "3", texto: "Opcionalmente escoge candidatos preferidos" },
           { paso: "4", texto: 'Presiona "Verificar mi voto"' },
         ].map((item) => (
           <div
@@ -54,8 +69,20 @@ export default function SimuladorPage() {
         ))}
       </div>
 
-      {/* Simulador principal */}
-      <CedulaSimulador />
+      {/* Selector de departamento */}
+      <SelectorDepartamento departamentoActual={dep} />
+
+      {/* Aviso si no hay departamento seleccionado */}
+      {!dep && (
+        <div className="hidden sm:block max-w-3xl mx-auto mb-4 text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2">
+          Elige tu departamento para ver los candidatos de{" "}
+          <strong>Senadores Regionales</strong> y{" "}
+          <strong>Diputados</strong> de tu circunscripción.
+        </div>
+      )}
+
+      {/* Simulador principal — datos reales de Supabase */}
+      <CedulaSimulador datos={datos} />
 
       {/* Info sobre valla electoral */}
       <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-4 max-w-3xl mx-auto">

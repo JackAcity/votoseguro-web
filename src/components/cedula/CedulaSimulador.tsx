@@ -5,11 +5,8 @@ import { ColumnaElectoral } from "./ColumnaElectoral";
 import { ResultadoVoto } from "./ResultadoVoto";
 import { useCedula } from "@/hooks/useCedula";
 import { CONFIG_COLUMNAS } from "@/lib/cedula-logic";
-import { DATOS_SIMULADOR } from "@/lib/mock-data";
 import { initSesion, registrarIntencionVoto } from "@/lib/analytics";
-import type { VotoCedula } from "@/lib/types";
-
-const DATOS = DATOS_SIMULADOR;
+import type { DatosSimulador, VotoCedula } from "@/lib/types";
 
 type ColumnaKey = keyof Omit<VotoCedula, "formulaPresidencial">;
 
@@ -26,13 +23,6 @@ const TODAS_COLUMNAS: Array<{
   { key: "parlamentoAndino", configIdx: 4, esFormula: false },
 ];
 
-const COLUMNA_DATOS: Record<ColumnaKey, typeof DATOS.senadoresNacionales> = {
-  senadorNacional: DATOS.senadoresNacionales,
-  senadorRegional: DATOS.senadoresRegionales,
-  diputado: DATOS.diputados,
-  parlamentoAndino: DATOS.parlamentoAndino,
-};
-
 // Nombres cortos para tabs en móvil
 const TAB_LABELS: Record<string, { short: string; emoji: string }> = {
   formulaPresidencial: { short: "Presidente", emoji: "🏛️" },
@@ -42,7 +32,20 @@ const TAB_LABELS: Record<string, { short: string; emoji: string }> = {
   parlamentoAndino: { short: "Andino", emoji: "🌎" },
 };
 
-export function CedulaSimulador() {
+interface Props {
+  datos: DatosSimulador;
+}
+
+export function CedulaSimulador({ datos }: Props) {
+  const DATOS = datos;
+
+  const COLUMNA_DATOS: Record<ColumnaKey, typeof DATOS.senadoresNacionales> = {
+    senadorNacional: DATOS.senadoresNacionales,
+    senadorRegional: DATOS.senadoresRegionales,
+    diputado: DATOS.diputados,
+    parlamentoAndino: DATOS.parlamentoAndino,
+  };
+
   const {
     voto,
     resultado,
