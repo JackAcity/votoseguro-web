@@ -9,6 +9,11 @@
  * - tx_guid_foto puede ser null → fotoUrl queda undefined.
  * - Senadores nacionales: ubigeo_postula = '000000'
  * - Senadores regionales: ubigeo_postula != '000000' (tienen ubigeo de circunscripción)
+ *
+ * ESQUEMA REAL DE LA BD (verificado 2026-02-14):
+ * - candidatos.organizacion_politica_nombre: nombre completo del partido (ya viene en la fila)
+ * - organizaciones_politicas: solo tiene id_organizacion, nombre (sin sigla ni numero_lista)
+ * - No hacer join con organizaciones_politicas — usar organizacion_politica_nombre de candidatos
  */
 
 import { createServerClient } from "@/lib/supabase-server";
@@ -41,13 +46,6 @@ const ID_PROCESO = 124;
 // Tipos internos que mapean la respuesta de Supabase
 // ──────────────────────────────────────────────────────────────────────────────
 
-interface OrgRow {
-  id_organizacion: number;
-  nombre: string;
-  sigla: string | null;
-  numero_lista: number | null;
-}
-
 interface CandidatoRow {
   id_hoja_vida: number;
   nombres: string;
@@ -60,8 +58,8 @@ interface CandidatoRow {
   departamento_postula: string | null;
   ubigeo_postula: string | null;
   id_organizacion_politica: number | null;
-  // Supabase sin schema tipado puede devolver objeto o array en relaciones FK
-  organizaciones_politicas: OrgRow | OrgRow[] | null;
+  // Nombre del partido viene directo en candidatos (no requiere join)
+  organizacion_politica_nombre: string | null;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -70,8 +68,29 @@ interface CandidatoRow {
 
 function fotoUrl(txGuidFoto: string | null | undefined): string | undefined {
   if (!txGuidFoto || txGuidFoto.trim() === "") return undefined;
-  // guid viene como "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX" o similar
   return `${JNE_FOTO_BASE}/${txGuidFoto.trim()}.jpg`;
+}
+
+/**
+ * Genera sigla automática a partir del nombre del partido.
+ * Toma la primera letra de cada palabra significativa (>2 chars), máximo 4.
+ * Ejemplos:
+ *   "FUERZA POPULAR" → "FP"
+ *   "ALIANZA PARA EL PROGRESO" → "APP" (omite "EL")
+ *   "PARTIDO DEMOCRATICO SOMOS PERU" → "PDSP"
+ *
+ * Calidad de datos: preserva MAYÚSCULAS del original JNE.
+ */
+function generarSigla(nombre: string): string {
+  const PALABRAS_EXCLUIDAS = new Set(["DE", "DEL", "LA", "EL", "LOS", "LAS", "Y", "E", "A", "EN", "POR", "PARA"]);
+  const palabras = nombre
+    .trim()
+    .split(/\s+/)
+    .filter((p) => p.length > 1 && !PALABRAS_EXCLUIDAS.has(p));
+  return palabras
+    .slice(0, 4)
+    .map((p) => p[0])
+    .join("");
 }
 
 function mapCandidato(row: CandidatoRow, cargo: TipoCargo): Candidato {
@@ -94,37 +113,25 @@ function mapCandidato(row: CandidatoRow, cargo: TipoCargo): Candidato {
   };
 }
 
-function resolveOrg(raw: CandidatoRow["organizaciones_politicas"]): OrgRow | null {
-  if (!raw) return null;
-  // Supabase puede devolver array (cuando infiere sin schema) u objeto
-  if (Array.isArray(raw)) return raw[0] ?? null;
-  return raw;
-}
-
-function mapOrganizacion(
-  raw: CandidatoRow["organizaciones_politicas"]
-): OrganizacionPolitica {
-  const org = resolveOrg(raw);
+function mapOrganizacion(row: CandidatoRow): OrganizacionPolitica {
+  const nombre = row.organizacion_politica_nombre ?? "Sin nombre";
   return {
-    id: org?.id_organizacion ?? 0,
-    nombre: org?.nombre ?? "Sin nombre",
-    sigla: org?.sigla ?? "",
-    colorPrimario: "#6B7280", // color neutro — se puede personalizar después
-    numeroLista: org?.numero_lista ?? 0,
+    id: row.id_organizacion_politica ?? 0,
+    nombre,
+    sigla: generarSigla(nombre),
+    colorPrimario: "#6B7280", // neutro — personalizable después
+    // numero_lista no está en BD; usar id_organizacion como orden estable
+    numeroLista: row.id_organizacion_politica ?? 0,
   };
 }
 
 /**
  * Agrupa filas de candidatos por organización política → ListaElectoral[].
- * Para fórmulas presidenciales: el primer candidato es el presidente,
- * segundo = VP1, tercero = VP2 (por numero_candidato ASC).
  */
 function agruparEnListas(
   rows: CandidatoRow[],
-  cargo: TipoCargo,
-  esFormula = false
+  cargo: TipoCargo
 ): ListaElectoral[] {
-  // Agrupar por id_organizacion_politica
   const mapa = new Map<number, CandidatoRow[]>();
   for (const row of rows) {
     const idOrg = row.id_organizacion_politica ?? 0;
@@ -140,31 +147,22 @@ function agruparEnListas(
       (a, b) => (a.numero_candidato ?? 999) - (b.numero_candidato ?? 999)
     );
 
-    const orgRaw = candidatosOrg[0].organizaciones_politicas;
-    if (!resolveOrg(orgRaw)) continue;
+    const primeraFila = candidatosOrg[0];
+    if (!primeraFila.id_organizacion_politica) continue;
 
-    const organizacion = mapOrganizacion(orgRaw);
+    const organizacion = mapOrganizacion(primeraFila);
     const candidatos = candidatosOrg.map((r) => mapCandidato(r, cargo));
 
-    const lista: ListaElectoral = {
+    listas.push({
       id: organizacion.id,
       organizacion,
       cargo,
       candidatos,
-    };
-
-    if (esFormula) {
-      // Mapear presidente y vicepresidentes para acceso directo
-      lista.presidente = candidatos.find((c) => c.numeroCandidato === 1);
-      lista.vicepresidente1 = candidatos.find((c) => c.numeroCandidato === 2);
-      lista.vicepresidente2 = candidatos.find((c) => c.numeroCandidato === 3);
-    }
-
-    listas.push(lista);
+    });
   }
 
-  // Ordenar listas por numero_lista de la organización
-  listas.sort((a, b) => a.organizacion.numeroLista - b.organizacion.numeroLista);
+  // Ordenar por id_organizacion_politica (orden estable y consistente entre columnas)
+  listas.sort((a, b) => a.organizacion.id - b.organizacion.id);
 
   return listas;
 }
@@ -184,8 +182,8 @@ export async function getDatosSimulador(
 ): Promise<DatosSimulador> {
   const supabase = createServerClient();
 
-  // SELECT base que incluye datos de la organización política
-  // Usamos el foreign key id_organizacion_politica → organizaciones_politicas
+  // SELECT sin join a organizaciones_politicas (sigla/numero_lista no existen en esa tabla)
+  // organizacion_politica_nombre viene directamente en la tabla candidatos
   const selectCandidatos = `
     id_hoja_vida,
     nombres,
@@ -198,12 +196,7 @@ export async function getDatosSimulador(
     departamento_postula,
     ubigeo_postula,
     id_organizacion_politica,
-    organizaciones_politicas (
-      id_organizacion,
-      nombre,
-      sigla,
-      numero_lista
-    )
+    organizacion_politica_nombre
   `;
 
   // ── 5 queries en paralelo ──────────────────────────────────────────────────
@@ -216,7 +209,6 @@ export async function getDatosSimulador(
     parlamentoAndinoResult,
   ] = await Promise.all([
     // 1. Fórmula presidencial (PRESIDENTE + ambos VP)
-    //    Traemos los 3 cargos y los agrupamos por organización
     supabase
       .from("candidatos")
       .select(selectCandidatos)
@@ -270,47 +262,44 @@ export async function getDatosSimulador(
       .order("numero_candidato", { ascending: true }),
   ]);
 
-  // ── Manejo de errores (no bloquear render — mostrar datos parciales) ────────
+  // ── Manejo de errores ──────────────────────────────────────────────────────
   if (presidentes.error) {
-    console.error("[candidatos-service] Error cargando presidentes:", presidentes.error.message);
+    console.error("[candidatos-service] presidentes:", presidentes.error.message);
   }
   if (senadoresNac.error) {
-    console.error("[candidatos-service] Error cargando senadores nacionales:", senadoresNac.error.message);
+    console.error("[candidatos-service] senadoresNac:", senadoresNac.error.message);
   }
   if (senadoresReg.error) {
-    console.error("[candidatos-service] Error cargando senadores regionales:", senadoresReg.error.message);
+    console.error("[candidatos-service] senadoresReg:", senadoresReg.error.message);
   }
   if (diputadosResult.error) {
-    console.error("[candidatos-service] Error cargando diputados:", diputadosResult.error.message);
+    console.error("[candidatos-service] diputados:", diputadosResult.error.message);
   }
   if (parlamentoAndinoResult.error) {
-    console.error("[candidatos-service] Error cargando parlamento andino:", parlamentoAndinoResult.error.message);
+    console.error("[candidatos-service] parlamentoAndino:", parlamentoAndinoResult.error.message);
   }
 
   // ── Construir fórmulas presidenciales ──────────────────────────────────────
-  // Los 3 cargos vienen mezclados → agrupar por org y construir lista única
   const rowsPresidentes = (presidentes.data ?? []) as unknown as CandidatoRow[];
 
-  // Primero extraemos los presidentes (numero_candidato = 1) como base de lista
-  const mapa = new Map<number, CandidatoRow[]>();
+  const mapaFormulas = new Map<number, CandidatoRow[]>();
   for (const row of rowsPresidentes) {
     const idOrg = row.id_organizacion_politica ?? 0;
-    if (!mapa.has(idOrg)) mapa.set(idOrg, []);
-    mapa.get(idOrg)!.push(row);
+    if (!mapaFormulas.has(idOrg)) mapaFormulas.set(idOrg, []);
+    mapaFormulas.get(idOrg)!.push(row);
   }
 
   const formulasPresidenciales: ListaElectoral[] = [];
-  for (const [, filas] of mapa) {
+  for (const [, filas] of mapaFormulas) {
     filas.sort(
       (a, b) => (a.numero_candidato ?? 999) - (b.numero_candidato ?? 999)
     );
-    const orgRaw = filas[0].organizaciones_politicas;
-    if (!resolveOrg(orgRaw)) continue;
+    const primeraFila = filas[0];
+    if (!primeraFila.id_organizacion_politica) continue;
 
-    const organizacion = mapOrganizacion(orgRaw);
-    const candidatos = filas.map((r) =>
-      mapCandidato(r, "FORMULA_PRESIDENCIAL")
-    );
+    const organizacion = mapOrganizacion(primeraFila);
+    const candidatos = filas.map((r) => mapCandidato(r, "FORMULA_PRESIDENCIAL"));
+
     formulasPresidenciales.push({
       id: organizacion.id,
       organizacion,
@@ -321,9 +310,7 @@ export async function getDatosSimulador(
       vicepresidente2: candidatos.find((c) => c.numeroCandidato === 3),
     });
   }
-  formulasPresidenciales.sort(
-    (a, b) => a.organizacion.numeroLista - b.organizacion.numeroLista
-  );
+  formulasPresidenciales.sort((a, b) => a.organizacion.id - b.organizacion.id);
 
   return {
     formulasPresidenciales,
