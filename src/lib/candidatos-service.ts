@@ -113,24 +113,28 @@ function mapCandidato(row: CandidatoRow, cargo: TipoCargo): Candidato {
   };
 }
 
-function mapOrganizacion(row: CandidatoRow): OrganizacionPolitica {
+function mapOrganizacion(
+  row: CandidatoRow,
+  numeroLista: number
+): OrganizacionPolitica {
   const nombre = row.organizacion_politica_nombre ?? "Sin nombre";
   return {
     id: row.id_organizacion_politica ?? 0,
     nombre,
     sigla: generarSigla(nombre),
     colorPrimario: "#6B7280", // neutro — personalizable después
-    // numero_lista no está en BD; usar id_organizacion como orden estable
-    numeroLista: row.id_organizacion_politica ?? 0,
+    numeroLista,
   };
 }
 
 /**
  * Agrupa filas de candidatos por organización política → ListaElectoral[].
+ * @param mapaNumeros - Mapa global id_org → numero_lista para consistencia entre columnas.
  */
 function agruparEnListas(
   rows: CandidatoRow[],
-  cargo: TipoCargo
+  cargo: TipoCargo,
+  mapaNumeros: Map<number, number>
 ): ListaElectoral[] {
   const mapa = new Map<number, CandidatoRow[]>();
   for (const row of rows) {
@@ -150,7 +154,8 @@ function agruparEnListas(
     const primeraFila = candidatosOrg[0];
     if (!primeraFila.id_organizacion_politica) continue;
 
-    const organizacion = mapOrganizacion(primeraFila);
+    const numLista = mapaNumeros.get(primeraFila.id_organizacion_politica) ?? 0;
+    const organizacion = mapOrganizacion(primeraFila, numLista);
     const candidatos = candidatosOrg.map((r) => mapCandidato(r, cargo));
 
     listas.push({
@@ -161,8 +166,8 @@ function agruparEnListas(
     });
   }
 
-  // Ordenar por id_organizacion_politica (orden estable y consistente entre columnas)
-  listas.sort((a, b) => a.organizacion.id - b.organizacion.id);
+  // Ordenar por numero_lista (orden secuencial consistente)
+  listas.sort((a, b) => a.organizacion.numeroLista - b.organizacion.numeroLista);
 
   return listas;
 }
@@ -279,6 +284,28 @@ export async function getDatosSimulador(
     console.error("[candidatos-service] parlamentoAndino:", parlamentoAndinoResult.error.message);
   }
 
+  // ── Construir mapa global id_org → numero_lista (secuencial 1-based) ────────
+  // Recopilar todos los id_organizacion_politica de todas las queries,
+  // ordenar por id (estable), asignar índice 1-based.
+  // Esto garantiza que el mismo partido tenga el mismo número en todas las columnas.
+  const todasLasRows = [
+    ...(presidentes.data ?? []),
+    ...(senadoresNac.data ?? []),
+    ...(senadoresReg.data ?? []),
+    ...(diputadosResult.data ?? []),
+    ...(parlamentoAndinoResult.data ?? []),
+  ] as unknown as CandidatoRow[];
+
+  const idsOrg = [...new Set(
+    todasLasRows
+      .map((r) => r.id_organizacion_politica)
+      .filter((id): id is number => id !== null && id !== undefined)
+  )].sort((a, b) => a - b);
+
+  // Mapa: id_organizacion_politica → numero_lista (1, 2, 3, ...)
+  const mapaNumeros = new Map<number, number>();
+  idsOrg.forEach((id, idx) => mapaNumeros.set(id, idx + 1));
+
   // ── Construir fórmulas presidenciales ──────────────────────────────────────
   const rowsPresidentes = (presidentes.data ?? []) as unknown as CandidatoRow[];
 
@@ -297,7 +324,8 @@ export async function getDatosSimulador(
     const primeraFila = filas[0];
     if (!primeraFila.id_organizacion_politica) continue;
 
-    const organizacion = mapOrganizacion(primeraFila);
+    const numLista = mapaNumeros.get(primeraFila.id_organizacion_politica) ?? 0;
+    const organizacion = mapOrganizacion(primeraFila, numLista);
     const candidatos = filas.map((r) => mapCandidato(r, "FORMULA_PRESIDENCIAL"));
 
     formulasPresidenciales.push({
@@ -310,25 +338,31 @@ export async function getDatosSimulador(
       vicepresidente2: candidatos.find((c) => c.numeroCandidato === 3),
     });
   }
-  formulasPresidenciales.sort((a, b) => a.organizacion.id - b.organizacion.id);
+  formulasPresidenciales.sort(
+    (a, b) => a.organizacion.numeroLista - b.organizacion.numeroLista
+  );
 
   return {
     formulasPresidenciales,
     senadoresNacionales: agruparEnListas(
       (senadoresNac.data ?? []) as unknown as CandidatoRow[],
-      "SENADOR_NACIONAL"
+      "SENADOR_NACIONAL",
+      mapaNumeros
     ),
     senadoresRegionales: agruparEnListas(
       (senadoresReg.data ?? []) as unknown as CandidatoRow[],
-      "SENADOR_REGIONAL"
+      "SENADOR_REGIONAL",
+      mapaNumeros
     ),
     diputados: agruparEnListas(
       (diputadosResult.data ?? []) as unknown as CandidatoRow[],
-      "DIPUTADO"
+      "DIPUTADO",
+      mapaNumeros
     ),
     parlamentoAndino: agruparEnListas(
       (parlamentoAndinoResult.data ?? []) as unknown as CandidatoRow[],
-      "PARLAMENTO_ANDINO"
+      "PARLAMENTO_ANDINO",
+      mapaNumeros
     ),
   };
 }
