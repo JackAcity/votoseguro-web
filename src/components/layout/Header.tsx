@@ -50,6 +50,13 @@ export function Header() {
               Inicio
             </Link>
             <Link
+              href="/guia"
+              className="hidden sm:inline-flex items-center px-3 py-2 rounded-md text-sm font-medium
+                         hover:bg-red-600 transition-colors min-h-[44px]"
+            >
+              Guía
+            </Link>
+            <Link
               href="/simulador"
               className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-md text-sm font-bold
                          bg-yellow-400 text-gray-900 hover:bg-yellow-300 transition-colors
