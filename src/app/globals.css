@@ -26,6 +26,11 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Números de countdown con fuente monoespaciada */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 @layer components {
@@ -46,4 +51,37 @@
            rounded-lg text-sm transition-colors shadow-md focus:outline-none
            focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2;
   }
+
+  /* Animación de pulso para el punto de "en vivo" */
+  .dot-live {
+    @apply inline-block w-2 h-2 bg-green-400 rounded-full;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+}
+
+/* Animación suave del progreso de la cédula */
+@keyframes fill-progress {
+  from { width: 0%; }
+}
+
+/* Animación de entrada del resultado */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#resultado-voto {
+  animation: slide-up 0.35s ease-out;
+}
+
+/* Pulso suave para el indicador de vida */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
 }

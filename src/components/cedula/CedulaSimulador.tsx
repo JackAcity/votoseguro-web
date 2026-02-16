@@ -10,7 +10,6 @@ import type { DatosSimulador, VotoCedula } from "@/lib/types";
 
 type ColumnaKey = keyof Omit<VotoCedula, "formulaPresidencial">;
 
-// Todas las columnas en orden
 const TODAS_COLUMNAS: Array<{
   key: "formulaPresidencial" | ColumnaKey;
   configIdx: number;
@@ -23,13 +22,12 @@ const TODAS_COLUMNAS: Array<{
   { key: "parlamentoAndino", configIdx: 4, esFormula: false },
 ];
 
-// Nombres cortos para tabs en móvil
-const TAB_LABELS: Record<string, { short: string; emoji: string }> = {
-  formulaPresidencial: { short: "Presidente", emoji: "🏛️" },
-  senadorNacional: { short: "Sen. Nac.", emoji: "🗳️" },
-  senadorRegional: { short: "Sen. Reg.", emoji: "📍" },
-  diputado: { short: "Diputados", emoji: "🏛️" },
-  parlamentoAndino: { short: "Andino", emoji: "🌎" },
+const TAB_LABELS: Record<string, { short: string; emoji: string; full: string }> = {
+  formulaPresidencial: { short: "Presidente", emoji: "🏛️", full: "Fórmula Presidencial" },
+  senadorNacional:     { short: "Sen. Nac.", emoji: "🗳️", full: "Senadores Nacionales" },
+  senadorRegional:     { short: "Sen. Reg.", emoji: "📍", full: "Senadores Regionales" },
+  diputado:            { short: "Diputados", emoji: "🏛️", full: "Diputados" },
+  parlamentoAndino:    { short: "Andino", emoji: "🌎", full: "Parlamento Andino" },
 };
 
 interface Props {
@@ -40,9 +38,9 @@ export function CedulaSimulador({ datos }: Props) {
   const DATOS = datos;
 
   const COLUMNA_DATOS: Record<ColumnaKey, typeof DATOS.senadoresNacionales> = {
-    senadorNacional: DATOS.senadoresNacionales,
-    senadorRegional: DATOS.senadoresRegionales,
-    diputado: DATOS.diputados,
+    senadorNacional:  DATOS.senadoresNacionales,
+    senadorRegional:  DATOS.senadoresRegionales,
+    diputado:         DATOS.diputados,
     parlamentoAndino: DATOS.parlamentoAndino,
   };
 
@@ -57,49 +55,44 @@ export function CedulaSimulador({ datos }: Props) {
   } = useCedula();
 
   const [mostrarResultado, setMostrarResultado] = useState(false);
-  // Tab activo en móvil (0 = Presidencial, ..., 4 = Parlamento Andino)
   const [tabActivo, setTabActivo] = useState(0);
 
-  // Iniciar sesión anónima al montar el simulador
   useEffect(() => {
-    initSesion()
-  }, [])
+    initSesion();
+  }, []);
 
   const handleValidar = () => {
     validar();
     setMostrarResultado(true);
 
-    // Capturar intención de voto — fire and forget, no bloquea UI
-    const selecciones: Parameters<typeof registrarIntencionVoto>[1] = {}
-    // Fórmula presidencial (número = id de lista directamente)
+    const selecciones: Parameters<typeof registrarIntencionVoto>[1] = {};
     if (voto.formulaPresidencial !== undefined) {
       const lista = DATOS.formulasPresidenciales.find(
-        f => f.id === voto.formulaPresidencial
-      )
+        (f) => f.id === voto.formulaPresidencial
+      );
       if (lista) {
         selecciones["formulaPresidencial"] = {
           nombreOrganizacion: lista.organizacion.nombre,
-          idOrganizacion:     lista.organizacion.id,
+          idOrganizacion: lista.organizacion.id,
           esBlanco: false, esNulo: false, esValido: true,
-        }
+        };
       }
     }
-    // Columnas con SeleccionColumna (idLista + preferencias)
-    ;(["senadorNacional", "senadorRegional", "diputado", "parlamentoAndino"] as ColumnaKey[])
-      .forEach(key => {
-        const sel = voto[key]
-        if (!sel) return
-        const lista = COLUMNA_DATOS[key]?.find(l => l.id === sel.idLista)
+    (["senadorNacional", "senadorRegional", "diputado", "parlamentoAndino"] as ColumnaKey[])
+      .forEach((key) => {
+        const sel = voto[key];
+        if (!sel) return;
+        const lista = COLUMNA_DATOS[key]?.find((l) => l.id === sel.idLista);
         if (lista) {
           selecciones[key] = {
             nombreOrganizacion: lista.organizacion.nombre,
-            idOrganizacion:     lista.organizacion.id,
+            idOrganizacion: lista.organizacion.id,
             esBlanco: false, esNulo: false, esValido: true,
-          }
+          };
         }
-      })
+      });
     if (Object.keys(selecciones).length > 0 && resultado) {
-      registrarIntencionVoto(resultado, selecciones)
+      registrarIntencionVoto(resultado, selecciones);
     }
 
     setTimeout(() => {
@@ -117,18 +110,20 @@ export function CedulaSimulador({ datos }: Props) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const tieneSeleccion = (key: string) => {
+    if (key === "formulaPresidencial") return voto.formulaPresidencial !== undefined;
+    return voto[key as ColumnaKey] !== undefined;
+  };
+
+  const columnasMarcadas = TODAS_COLUMNAS.filter((c) => tieneSeleccion(c.key)).length;
+  const progreso = (columnasMarcadas / TODAS_COLUMNAS.length) * 100;
+
   const hayAlgunaSeleccion =
     voto.formulaPresidencial !== undefined ||
     voto.senadorNacional !== undefined ||
     voto.senadorRegional !== undefined ||
     voto.diputado !== undefined ||
     voto.parlamentoAndino !== undefined;
-
-  // Indicador de columnas con selección
-  const tieneSeleccion = (key: string) => {
-    if (key === "formulaPresidencial") return voto.formulaPresidencial !== undefined;
-    return voto[key as ColumnaKey] !== undefined;
-  };
 
   const renderColumna = (
     col: (typeof TODAS_COLUMNAS)[number],
@@ -167,120 +162,164 @@ export function CedulaSimulador({ datos }: Props) {
 
   return (
     <div className="max-w-full">
-      {/* Header de la cédula */}
-      <div className="bg-white border border-gray-400 rounded-t-lg">
-        <div className="bg-red-700 text-white text-center py-2 rounded-t-lg">
+      {/* ── CÉDULA OFICIAL ── */}
+      <div className="rounded-lg overflow-hidden border-2 border-gray-500 shadow-xl">
+
+        {/* Franja superior rojo-blanco-rojo (bandera) */}
+        <div className="flex h-2">
+          <div className="flex-1 bg-red-700" />
+          <div className="flex-1 bg-white border-y border-gray-300" />
+          <div className="flex-1 bg-red-700" />
+        </div>
+
+        {/* Header oficial */}
+        <div className="bg-red-700 text-white text-center py-2.5 px-4">
           <h2 className="text-xs sm:text-sm font-black uppercase tracking-widest">
             REPÚBLICA DEL PERÚ
           </h2>
-          <p className="text-[10px] sm:text-xs text-red-200">
+          <p className="text-[9px] sm:text-[10px] text-red-200 tracking-wide">
             OFICINA NACIONAL DE PROCESOS ELECTORALES — ONPE
           </p>
         </div>
-        <div className="bg-gray-100 text-center py-1.5 border-b border-gray-300">
-          <p className="text-[11px] sm:text-xs font-bold text-gray-700 uppercase tracking-wide">
-            CÉDULA DE SUFRAGIO — ELECCIONES GENERALES 2026
+
+        {/* Sub-header cédula */}
+        <div className="bg-gray-100 text-center py-1.5 px-4 border-b border-gray-400">
+          <p className="text-[11px] sm:text-xs font-bold text-gray-800 uppercase tracking-widest">
+            CÉDULA DE SUFRAGIO
           </p>
-          <p className="text-[9px] sm:text-[10px] text-gray-500">
-            Simulador educativo — No es cédula oficial
+          <p className="text-[9px] sm:text-[10px] font-semibold text-gray-600 uppercase tracking-wide">
+            ELECCIONES GENERALES — 13 DE ABRIL DE 2026
+          </p>
+          <p className="text-[8px] sm:text-[9px] text-gray-400 mt-0.5">
+            Simulador educativo — No es cédula oficial ONPE
           </p>
         </div>
-      </div>
 
-      {/* ── MÓVIL / TABLET (<lg): Tabs + una columna a la vez ── */}
-      <div className="lg:hidden border border-t-0 border-gray-400 rounded-b-lg overflow-hidden">
-        {/* Tabs de navegación entre columnas */}
-        <div className="flex overflow-x-auto bg-gray-800 scrollbar-hide">
-          {TODAS_COLUMNAS.map((col, idx) => {
-            const label = TAB_LABELS[col.key];
-            const activo = tabActivo === idx;
-            const marcado = tieneSeleccion(col.key);
-            return (
+        {/* Barra de progreso */}
+        <div className="bg-white border-b border-gray-300 px-3 py-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] text-gray-500 font-medium">
+              Progreso del voto
+            </span>
+            <span className="text-[10px] font-bold text-gray-700">
+              {columnasMarcadas} de 5 columnas marcadas
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div
+              className="h-2 rounded-full transition-all duration-500"
+              style={{
+                width: `${progreso}%`,
+                backgroundColor: progreso === 100 ? "#16a34a" : "#dc2626",
+              }}
+            />
+          </div>
+          {/* Indicadores por columna */}
+          <div className="flex gap-1 mt-1.5">
+            {TODAS_COLUMNAS.map((col) => {
+              const marcado = tieneSeleccion(col.key);
+              const label = TAB_LABELS[col.key];
+              return (
+                <div key={col.key} className="flex-1 flex flex-col items-center gap-0.5">
+                  <div
+                    className={`w-full h-1 rounded-full transition-colors ${
+                      marcado ? "bg-green-500" : "bg-gray-200"
+                    }`}
+                  />
+                  <span className="text-[7px] text-gray-400 hidden sm:block truncate text-center w-full">
+                    {label.emoji}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── MÓVIL / TABLET (<lg): Tabs + una columna a la vez ── */}
+        <div className="lg:hidden">
+          {/* Tabs */}
+          <div className="flex overflow-x-auto bg-gray-900 scrollbar-hide">
+            {TODAS_COLUMNAS.map((col, idx) => {
+              const label = TAB_LABELS[col.key];
+              const activo = tabActivo === idx;
+              const marcado = tieneSeleccion(col.key);
+              return (
+                <button
+                  key={col.key}
+                  type="button"
+                  onClick={() => setTabActivo(idx)}
+                  className={`
+                    flex-shrink-0 flex flex-col items-center justify-center
+                    px-3 py-2.5 min-w-[68px] text-center transition-all
+                    border-b-2 relative
+                    ${activo
+                      ? "border-yellow-400 bg-gray-700 text-white"
+                      : "border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-800"
+                    }
+                  `}
+                  aria-selected={activo}
+                >
+                  <span className="text-sm leading-none">{label.emoji}</span>
+                  <span className="text-[8px] mt-0.5 leading-tight whitespace-nowrap">
+                    {label.short}
+                  </span>
+                  {marcado && (
+                    <span className="absolute top-1 right-1.5 w-1.5 h-1.5 bg-green-400 rounded-full" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Columna activa */}
+          <div className="min-h-[400px] bg-white">
+            {renderColumna(TODAS_COLUMNAS[tabActivo])}
+          </div>
+
+          {/* Navegación anterior/siguiente */}
+          <div className="flex border-t-2 border-gray-300 bg-gray-50">
+            <button
+              type="button"
+              onClick={() => setTabActivo((t) => Math.max(0, t - 1))}
+              disabled={tabActivo === 0}
+              className="flex-1 py-3.5 text-sm font-semibold text-gray-600 hover:bg-gray-100
+                         disabled:opacity-30 disabled:cursor-not-allowed transition-colors
+                         border-r border-gray-300 min-h-[48px]"
+            >
+              ← Anterior
+            </button>
+            {tabActivo < TODAS_COLUMNAS.length - 1 ? (
               <button
-                key={col.key}
                 type="button"
-                onClick={() => setTabActivo(idx)}
-                className={`
-                  flex-shrink-0 flex flex-col items-center justify-center
-                  px-3 py-2 min-w-[64px] text-center transition-colors
-                  border-b-2 relative
-                  ${activo
-                    ? "border-yellow-400 bg-gray-700 text-white"
-                    : "border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-700"
-                  }
-                `}
-                aria-selected={activo}
+                onClick={() => setTabActivo((t) => Math.min(TODAS_COLUMNAS.length - 1, t + 1))}
+                className="flex-1 py-3.5 text-sm font-semibold text-red-700 hover:bg-red-50
+                           transition-colors min-h-[48px]"
               >
-                <span className="text-base leading-none">{label.emoji}</span>
-                <span className="text-[9px] mt-0.5 leading-tight whitespace-nowrap">
-                  {label.short}
-                </span>
-                {/* Indicador de selección */}
-                {marcado && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-yellow-400 rounded-full" />
-                )}
+                Siguiente →
               </button>
-            );
-          })}
+            ) : (
+              <button
+                type="button"
+                onClick={handleValidar}
+                className="flex-1 py-3.5 text-sm font-bold bg-red-700 text-white
+                           hover:bg-red-800 transition-colors min-h-[48px]"
+              >
+                ✓ Verificar mi voto
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Progreso */}
-        <div className="bg-gray-100 px-3 py-1 flex items-center justify-between border-b border-gray-300">
-          <span className="text-[10px] text-gray-500">
-            Columna {tabActivo + 1} de {TODAS_COLUMNAS.length}
-          </span>
-          <span className="text-[10px] text-gray-500">
-            {TODAS_COLUMNAS.filter((c) => tieneSeleccion(c.key)).length} de 5 marcadas
-          </span>
+        {/* ── DESKTOP (lg+): 5 columnas completas ── */}
+        <div className="hidden lg:grid lg:grid-cols-5 border-t border-gray-400">
+          {TODAS_COLUMNAS.map((col) => renderColumna(col))}
         </div>
 
-        {/* Columna activa */}
-        <div className="min-h-[400px]">
-          {renderColumna(TODAS_COLUMNAS[tabActivo])}
-        </div>
-
-        {/* Navegación anterior/siguiente */}
-        <div className="flex border-t border-gray-300 bg-gray-50">
-          <button
-            type="button"
-            onClick={() => setTabActivo((t) => Math.max(0, t - 1))}
-            disabled={tabActivo === 0}
-            className="flex-1 py-3 text-sm font-semibold text-gray-600 hover:bg-gray-100
-                       disabled:opacity-30 disabled:cursor-not-allowed transition-colors
-                       border-r border-gray-300 min-h-[44px]"
-          >
-            ← Anterior
-          </button>
-          {tabActivo < TODAS_COLUMNAS.length - 1 ? (
-            <button
-              type="button"
-              onClick={() => setTabActivo((t) => Math.min(TODAS_COLUMNAS.length - 1, t + 1))}
-              className="flex-1 py-3 text-sm font-semibold text-red-700 hover:bg-red-50
-                         transition-colors min-h-[44px]"
-            >
-              Siguiente →
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleValidar}
-              className="flex-1 py-3 text-sm font-bold bg-red-700 text-white
-                         hover:bg-red-800 transition-colors min-h-[44px]"
-            >
-              Verificar mi voto ✓
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ── DESKTOP (lg+): 5 columnas completas ── */}
-      <div className="hidden lg:grid lg:grid-cols-5 border border-t-0 border-gray-400 rounded-b-lg overflow-hidden">
-        {TODAS_COLUMNAS.map((col) => renderColumna(col))}
       </div>
 
       {/* Nota legal */}
       <p className="text-[9px] sm:text-[10px] text-gray-400 text-center mt-2 px-2">
-        ⚠ Simulador educativo. Datos referenciales. La cédula oficial es emitida por la ONPE.
+        ⚠ Simulador educativo. Datos referenciales del JNE. La cédula oficial es emitida por la ONPE.
       </p>
 
       {/* Botones de acción — Desktop */}
@@ -289,38 +328,41 @@ export function CedulaSimulador({ datos }: Props) {
           type="button"
           onClick={handleValidar}
           className="bg-red-700 hover:bg-red-800 text-white font-bold
-                     py-3 px-8 rounded-lg text-sm transition-colors shadow-md min-h-[44px]"
+                     py-3.5 px-10 rounded-lg text-sm transition-colors shadow-md min-h-[48px]
+                     flex items-center gap-2"
         >
-          Verificar mi voto →
+          <span className="text-base">✓</span>
+          Verificar mi voto
         </button>
         {hayAlgunaSeleccion && (
           <button
             type="button"
             onClick={handleReintentar}
             className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold
-                       py-3 px-6 rounded-lg text-sm transition-colors min-h-[44px]"
+                       py-3.5 px-6 rounded-lg text-sm transition-colors min-h-[48px]"
           >
             Borrar todo
           </button>
         )}
       </div>
 
-      {/* Botones — Móvil (solo mostrar si ya vio todas las columnas o hay selección) */}
+      {/* Botones — Móvil */}
       {hayAlgunaSeleccion && (
         <div className="lg:hidden flex gap-2 mt-3 px-1">
           <button
             type="button"
             onClick={handleValidar}
             className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold
-                       py-3 rounded-lg text-sm transition-colors shadow-md min-h-[44px]"
+                       py-3.5 rounded-lg text-sm transition-colors shadow-md min-h-[48px]
+                       flex items-center justify-center gap-2"
           >
-            ✓ Verificar mi voto
+            <span>✓</span> Verificar mi voto
           </button>
           <button
             type="button"
             onClick={handleReintentar}
             className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold
-                       py-3 px-4 rounded-lg text-sm transition-colors min-h-[44px]"
+                       py-3.5 px-4 rounded-lg text-sm transition-colors min-h-[48px]"
           >
             Borrar
           </button>
