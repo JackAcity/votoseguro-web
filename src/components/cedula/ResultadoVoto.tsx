@@ -136,14 +136,13 @@ export function ResultadoVoto({
             {/* Presidencial */}
             {(() => {
               const candidato = partidoPresidencial?.presidente;
-              const estadoCol = resultado.columnas["formulaPresidencial"];
-              const esNulo = estadoCol?.estado === "nulo";
+              const marcado = !!voto.formulaPresidencial;
               return (
-                <div className={`flex items-center gap-2 px-3 py-2 border-b border-gray-100 ${esNulo ? "bg-red-50" : voto.formulaPresidencial ? "bg-green-50/40" : "bg-gray-50"}`}>
+                <div className={`flex items-center gap-2 px-3 py-2 border-b border-gray-100 ${marcado ? "bg-green-50/40" : "bg-gray-50"}`}>
                   <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold shrink-0">
                     Presidente
                   </span>
-                  {voto.formulaPresidencial && candidato ? (
+                  {marcado && candidato ? (
                     <span className="text-xs text-gray-700 font-medium flex-1">
                       {candidato.nombres} {candidato.apellidoPaterno}
                       <span className="text-gray-400 ml-1">({partidoPresidencial?.organizacion.sigla})</span>
@@ -151,8 +150,7 @@ export function ResultadoVoto({
                   ) : (
                     <span className="text-xs text-gray-400 italic flex-1">Sin marcar</span>
                   )}
-                  {esNulo && <span className="text-[10px] text-red-600 font-bold shrink-0">⚠ NULO</span>}
-                  {!esNulo && voto.formulaPresidencial && <span className="text-green-500 text-xs shrink-0">✓</span>}
+                  {marcado && <span className="text-green-500 text-xs shrink-0">✓</span>}
                 </div>
               );
             })()}
