@@ -29,23 +29,28 @@ export function MarcaVoto({
       aria-label={seleccionado ? "Deseleccionar" : "Seleccionar"}
       className={`
         ${sizeClasses[size]}
-        border-2 flex items-center justify-center
-        transition-all duration-150 cursor-pointer
-        rounded-sm font-bold
+        border-2 flex items-center justify-center shrink-0
+        transition-all duration-150 cursor-pointer active:scale-95
+        rounded-sm font-bold relative overflow-hidden
         ${seleccionado
-          ? "border-gray-800 bg-white"
-          : "border-gray-400 bg-white hover:border-gray-600 hover:bg-gray-50"
+          ? "border-gray-700 bg-white shadow-sm"
+          : "border-gray-400 bg-white hover:border-gray-500 hover:bg-gray-50"
         }
         ${className}
       `}
       style={seleccionado ? { color: colorPartido } : {}}
     >
-      {seleccionado && (
+      {seleccionado ? (
         <span
-          className="select-none leading-none"
+          className="select-none leading-none marca-aspa"
           style={{ color: colorPartido, fontFamily: "serif" }}
         >
           ✗
+        </span>
+      ) : (
+        /* Guía visual del recuadro vacío */
+        <span className="text-gray-200 text-xs select-none leading-none">
+          +
         </span>
       )}
     </button>

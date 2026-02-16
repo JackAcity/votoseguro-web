@@ -10,6 +10,7 @@ interface FilaPartidoProps {
   onTogglePreferencial: (numeroCandidato: number) => void;
   maxPreferenciales: number;
   mostrarFormula?: boolean;
+  accentColor?: string;
 }
 
 export function FilaPartido({
@@ -19,6 +20,7 @@ export function FilaPartido({
   onTogglePreferencial,
   maxPreferenciales,
   mostrarFormula = false,
+  accentColor = "border-l-red-700",
 }: FilaPartidoProps) {
   const isSelected = seleccion?.idLista === lista.id;
   const prefs = seleccion?.preferencias ?? [];
@@ -27,12 +29,21 @@ export function FilaPartido({
   return (
     <div
       className={`
-        border-b border-gray-300 py-1.5 px-2 transition-colors
-        ${isSelected ? "bg-yellow-50 border-yellow-200" : "hover:bg-gray-50"}
+        border-b border-gray-200 py-2 px-2 transition-colors
+        border-l-2
+        ${isSelected
+          ? `bg-yellow-50 ${accentColor}`
+          : "border-l-transparent hover:bg-gray-50 hover:border-l-gray-200"
+        }
       `}
     >
-      {/* Fila principal: marca, nombre del partido */}
+      {/* Fila principal: número, marca, nombre del partido */}
       <div className="flex items-center gap-2">
+        {/* Número de lista */}
+        <span className="text-[10px] font-black text-gray-400 w-4 shrink-0 text-center">
+          {organizacion.numeroLista}
+        </span>
+
         {/* Aspa de selección */}
         <MarcaVoto
           seleccionado={isSelected}
@@ -44,16 +55,15 @@ export function FilaPartido({
         {/* Info del partido */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            {/* Color badge */}
             <div
-              className="w-2.5 h-2.5 rounded-sm shrink-0"
+              className="w-2 h-2 rounded-sm shrink-0"
               style={{ backgroundColor: organizacion.colorPrimario }}
             />
-            <span className="text-xs font-bold text-gray-800 leading-tight truncate uppercase">
+            <span className="text-[10px] font-black text-gray-800 leading-tight truncate uppercase">
               {organizacion.sigla}
             </span>
           </div>
-          <p className="text-[10px] text-gray-500 leading-tight truncate">
+          <p className="text-[9px] text-gray-400 leading-tight truncate">
             {organizacion.nombre}
           </p>
 
@@ -64,7 +74,7 @@ export function FilaPartido({
                 {lista.presidente.nombres} {lista.presidente.apellidoPaterno}
               </p>
               {lista.vicepresidente1 && (
-                <p className="text-[9px] text-gray-500 leading-tight">
+                <p className="text-[9px] text-gray-400 leading-tight">
                   VP1: {lista.vicepresidente1.nombres} {lista.vicepresidente1.apellidoPaterno}
                 </p>
               )}
@@ -73,11 +83,11 @@ export function FilaPartido({
         </div>
       </div>
 
-      {/* Candidatos con voto preferencial (solo si está seleccionado y tiene candidatos) */}
+      {/* Candidatos con voto preferencial */}
       {isSelected && maxPreferenciales > 0 && lista.candidatos.length > 0 && (
-        <div className="mt-1.5 ml-8 border-t border-yellow-200 pt-1.5">
-          <p className="text-[9px] text-gray-500 mb-1">
-            Voto preferencial (opcional — máx. {maxPreferenciales}):
+        <div className="mt-2 ml-8 border-t border-yellow-200 pt-1.5">
+          <p className="text-[9px] text-gray-400 mb-1.5 font-medium">
+            Voto preferencial — opcional (máx. {maxPreferenciales}):
           </p>
           <div className="flex flex-col gap-1">
             {lista.candidatos.slice(0, 8).map((candidato) => {
@@ -92,31 +102,36 @@ export function FilaPartido({
                   disabled={!puedeAgregar && !seleccionado}
                   aria-pressed={seleccionado}
                   className={`
-                    flex items-center gap-2 text-left rounded px-2 py-2
-                    transition-colors text-[11px] min-h-[44px]
+                    flex items-center gap-2 text-left rounded-md px-2 py-1.5
+                    transition-colors text-[11px] min-h-[40px]
                     ${seleccionado
-                      ? "bg-yellow-200 text-gray-800 font-semibold"
+                      ? "bg-yellow-200 text-gray-800 font-semibold border border-yellow-300"
                       : puedeAgregar
-                      ? "hover:bg-yellow-100 text-gray-600 cursor-pointer active:bg-yellow-200"
-                      : "text-gray-400 cursor-not-allowed opacity-50"
+                      ? "hover:bg-yellow-100 text-gray-600 cursor-pointer border border-transparent hover:border-yellow-200"
+                      : "text-gray-300 cursor-not-allowed border border-transparent"
                     }
                   `}
                 >
                   <span
                     className={`
-                      w-7 h-7 flex items-center justify-center rounded-sm text-[11px] font-bold shrink-0
+                      w-6 h-6 flex items-center justify-center rounded text-[10px] font-black shrink-0
                       border-2
                       ${seleccionado
                         ? "bg-yellow-400 border-yellow-500 text-gray-900"
-                        : "bg-white border-gray-300 text-gray-600"
+                        : puedeAgregar
+                        ? "bg-white border-gray-300 text-gray-600"
+                        : "bg-gray-100 border-gray-200 text-gray-300"
                       }
                     `}
                   >
                     {candidato.numeroCandidato}
                   </span>
-                  <span className="leading-tight line-clamp-2">
+                  <span className="leading-tight line-clamp-2 flex-1">
                     {candidato.nombres} {candidato.apellidoPaterno}
                   </span>
+                  {seleccionado && (
+                    <span className="text-green-600 text-xs shrink-0">✓</span>
+                  )}
                 </button>
               );
             })}
