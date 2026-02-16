@@ -31,13 +31,8 @@ export function FilaPartido({
         ${isSelected ? "bg-yellow-50 border-yellow-200" : "hover:bg-gray-50"}
       `}
     >
-      {/* Fila principal: número, marca, nombre del partido */}
+      {/* Fila principal: marca, nombre del partido */}
       <div className="flex items-center gap-2">
-        {/* Número de lista */}
-        <span className="text-xs font-bold text-gray-500 w-4 shrink-0 text-center">
-          {organizacion.numeroLista}
-        </span>
-
         {/* Aspa de selección */}
         <MarcaVoto
           seleccionado={isSelected}

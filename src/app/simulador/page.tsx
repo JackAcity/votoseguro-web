@@ -43,7 +43,7 @@ export default async function SimuladorPage({
         </h1>
         <p className="text-gray-600 text-sm max-w-2xl mx-auto">
           Practica tu voto para las{" "}
-          <strong>Elecciones Generales del Perú — 13 de abril de 2026</strong>.
+          <strong>Elecciones Generales del Perú — 12 de abril de 2026</strong>.
           Selecciona un partido en cada columna y opcionalmente marca tus
           candidatos preferidos. Al finalizar, verifica si tu voto es válido.
         </p>

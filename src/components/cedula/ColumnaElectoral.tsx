@@ -67,56 +67,79 @@ export function ColumnaElectoral({
               <div
                 key={lista.id}
                 className={`
-                  border-b border-gray-300 py-1.5 px-2 transition-colors cursor-pointer
-                  ${isSelected ? "bg-yellow-50" : "hover:bg-gray-50"}
+                  border-b border-gray-300 py-2 px-2 transition-colors cursor-pointer
+                  ${isSelected ? "bg-yellow-50 border-l-2 border-l-yellow-400" : "hover:bg-gray-50"}
                 `}
                 onClick={() => onSeleccionarLista(lista.id)}
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-500 w-4 shrink-0 text-center">
-                    {lista.organizacion.numeroLista}
-                  </span>
+                <div className="flex items-start gap-2">
+                  {/* Casilla de voto */}
                   <div
                     className={`
-                      w-8 h-8 border-2 flex items-center justify-center shrink-0 rounded-sm
+                      w-7 h-7 border-2 flex items-center justify-center shrink-0 rounded-sm mt-0.5
                       ${isSelected ? "border-gray-800 bg-white" : "border-gray-400 bg-white"}
                     `}
                   >
                     {isSelected && (
-                      <span
-                        className="text-xl font-bold select-none"
-                        style={{ color: lista.organizacion.colorPrimario }}
-                      >
+                      <span className="text-lg font-black select-none text-gray-900 leading-none">
                         ✗
                       </span>
                     )}
                   </div>
+
+                  {/* Foto del presidente */}
+                  {lista.presidente?.fotoUrl ? (
+                    <div className="shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={lista.presidente.fotoUrl}
+                        alt={`Foto de ${lista.presidente.nombres} ${lista.presidente.apellidoPaterno}`}
+                        width={36}
+                        height={44}
+                        className="w-9 h-11 object-cover object-top rounded-sm border border-gray-200 bg-gray-100"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-9 h-11 shrink-0 bg-gray-100 rounded-sm border border-gray-200 flex items-center justify-center">
+                      <span className="text-gray-300 text-lg">👤</span>
+                    </div>
+                  )}
+
+                  {/* Datos del partido y candidato */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1">
+                    {/* Sigla + color */}
+                    <div className="flex items-center gap-1 mb-0.5">
                       <div
-                        className="w-2.5 h-2.5 rounded-sm shrink-0"
+                        className="w-2 h-2 rounded-sm shrink-0"
                         style={{ backgroundColor: lista.organizacion.colorPrimario }}
                       />
-                      <span className="text-xs font-bold text-gray-800 truncate uppercase">
+                      <span className="text-[10px] font-black text-gray-800 uppercase leading-tight">
                         {lista.organizacion.sigla}
                       </span>
                     </div>
+                    {/* Nombre completo del partido */}
+                    <p className="text-[8px] text-gray-400 leading-tight mb-0.5 truncate">
+                      {lista.organizacion.nombre}
+                    </p>
+
                     {lista.presidente && (
-                      <div className="mt-0.5">
-                        <p className="text-[10px] font-semibold text-gray-800 leading-tight">
+                      <>
+                        <p className="text-[10px] font-bold text-gray-800 leading-tight">
                           {lista.presidente.nombres}{" "}
                           {lista.presidente.apellidoPaterno}
                         </p>
                         {lista.vicepresidente1 && (
-                          <p className="text-[9px] text-gray-500 leading-tight">
-                            {lista.vicepresidente1.nombres}{" "}
-                            {lista.vicepresidente1.apellidoPaterno}
+                          <p className="text-[8px] text-gray-500 leading-tight">
+                            VP1: {lista.vicepresidente1.apellidoPaterno}
                           </p>
                         )}
                         {lista.vicepresidente2 && (
-                          <p className="text-[9px] text-gray-500 leading-tight">
-                            {lista.vicepresidente2.nombres}{" "}
-                            {lista.vicepresidente2.apellidoPaterno}
+                          <p className="text-[8px] text-gray-500 leading-tight">
+                            VP2: {lista.vicepresidente2.apellidoPaterno}
                           </p>
                         )}
                         {lista.presidente.estado === "IMPUGNADO" && (
@@ -124,7 +147,7 @@ export function ColumnaElectoral({
                             IMPUGNADO
                           </span>
                         )}
-                      </div>
+                      </>
                     )}
                   </div>
                 </div>

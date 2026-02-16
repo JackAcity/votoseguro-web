@@ -25,7 +25,7 @@ export default function HomePage() {
             Simula tu cédula de sufragio con las 5 columnas oficiales.
             Entiende el voto preferencial, evita votos nulos y ejerce tu
             derecho con confianza el{" "}
-            <strong className="text-yellow-300">13 de abril de 2026</strong>.
+            <strong className="text-yellow-300">12 de abril de 2026</strong>.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -244,7 +244,7 @@ export default function HomePage() {
             ¿Listo para practicar tu voto?
           </h2>
           <p className="text-red-100 mb-8 text-lg">
-            Usa nuestro simulador gratuito y llega preparado el 13 de abril de 2026.
+            Usa nuestro simulador gratuito y llega preparado el 12 de abril de 2026.
           </p>
           <Link
             href="/simulador"

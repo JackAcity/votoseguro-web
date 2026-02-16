@@ -26,6 +26,8 @@ import type {
 } from "@/lib/types";
 
 // URL base para fotos de candidatos del JNE
+// IMPORTANTE: La extensión correcta es .jpeg (no .jpg) — verificado 2026-02-14
+// Formato: https://mpesije.jne.gob.pe/apidocs/{tx_guid_foto}.jpeg
 const JNE_FOTO_BASE = "https://mpesije.jne.gob.pe/apidocs";
 
 // Valores exactos de la columna `cargo` en la tabla `candidatos` de Supabase.
@@ -41,6 +43,61 @@ const CARGO = {
 
 // Proceso electoral activo
 const ID_PROCESO = 124;
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Orden oficial de las organizaciones políticas en la cédula — Sorteo ONPE
+// Acto público del 12 de febrero de 2026 (Resolución Jefatural n° 000007-2026-JN/ONPE)
+// Fuente: https://www.onpe.gob.pe (nota de prensa 12-feb-2026)
+//
+// IMPORTANTE (ONPE, diseño aprobado):
+// - La cédula oficial NO incluye números que identifiquen a las organizaciones.
+// - Solo muestra: nombre del partido + símbolo + foto del candidato (solo columna presidencial).
+// - Este mapa se usa únicamente para ordenar las filas en el simulador de forma
+//   idéntica a la cédula oficial.
+//
+// Partido Ciudadanos por el Perú (posición 14, id 2968) fue excluido por el JNE;
+// su espacio queda en blanco en la cédula oficial. En el simulador se omite.
+// ──────────────────────────────────────────────────────────────────────────────
+const ORDEN_ONPE: Record<number, number> = {
+  3025: 1,   // Alianza Electoral Venceremos
+  2869: 2,   // Partido Patriótico del Perú
+  2941: 3,   // Partido Cívico Obras
+  2901: 4,   // Frente Popular Agrícola FIA del Perú (FREPAP)
+  2895: 5,   // Partido Demócrata Verde
+  2961: 6,   // Partido del Buen Gobierno
+  2932: 7,   // Partido Político Perú Acción
+  2921: 8,   // Partido Político PRIN
+  2967: 9,   // Partido Político Progresemos
+  2935: 10,  // Partido Sí Creo
+  2956: 11,  // Partido País para Todos
+  2857: 12,  // Frente de la Esperanza 2021
+  2218: 13,  // Partido Político Nacional Perú Libre
+  // 2968: 14 ← Ciudadanos por el Perú (excluido JNE — espacio en blanco en cédula oficial)
+  2931: 15,  // Primero la Gente - Comunidad, Ecología, Libertad y Progreso
+  1264: 16,  // Partido Juntos Por el Perú
+  2731: 17,  // Partido Político Podemos Perú
+  2986: 18,  // Partido Democrático Federal
+  2898: 19,  // Partido Fe en el Perú
+  2985: 20,  // Partido Político Integridad Democrática
+  1366: 21,  // Fuerza Popular
+  1257: 22,  // Alianza para el Progreso
+  2995: 23,  // Partido Político Cooperación Popular
+  2980: 24,  // Ahora Nación - AN
+  2933: 25,  // Libertad Popular
+  2998: 26,  // Un Camino Diferente
+  2173: 27,  // Avanza País – Partido de Integración Social
+  2924: 28,  // Perú Moderno
+  2925: 29,  // Partido Político Perú Primero
+  2927: 30,  // Salvemos al Perú
+  14:   31,  // Partido Democrático Somos Perú
+  2930: 32,  // Partido Aprista Peruano
+  22:   33,  // Renovación Popular
+  2867: 34,  // Partido Demócrata Unido Perú
+  3024: 35,  // Fuerza y Libertad
+  2939: 36,  // Partido de los Trabajadores y Emprendedores PTE
+  3023: 37,  // Unidad Nacional
+  2840: 38,  // Partido Morado
+};
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Tipos internos que mapean la respuesta de Supabase
@@ -68,7 +125,7 @@ interface CandidatoRow {
 
 function fotoUrl(txGuidFoto: string | null | undefined): string | undefined {
   if (!txGuidFoto || txGuidFoto.trim() === "") return undefined;
-  return `${JNE_FOTO_BASE}/${txGuidFoto.trim()}.jpg`;
+  return `${JNE_FOTO_BASE}/${txGuidFoto.trim()}.jpeg`;
 }
 
 /**
@@ -204,7 +261,7 @@ export async function getDatosSimulador(
     organizacion_politica_nombre
   `;
 
-  // ── 5 queries en paralelo ──────────────────────────────────────────────────
+  // ── 6 queries en paralelo ──────────────────────────────────────────────────
 
   const [
     presidentes,
@@ -212,6 +269,7 @@ export async function getDatosSimulador(
     senadoresReg,
     diputadosResult,
     parlamentoAndinoResult,
+    todasOrgsResult,
   ] = await Promise.all([
     // 1. Fórmula presidencial (PRESIDENTE + ambos VP)
     supabase
@@ -265,6 +323,16 @@ export async function getDatosSimulador(
       .eq("cargo", CARGO.PARLAMENTO_ANDINO)
       .neq("estado", "EXCLUIDO")
       .order("numero_candidato", { ascending: true }),
+
+    // 6. Todos los id_organizacion_politica del proceso (para mapa global estable)
+    // Solo necesitamos id y nombre — sin filtro de departamento ni cargo
+    // Usamos numero_candidato=1 para reducir volumen (1 fila por org es suficiente)
+    supabase
+      .from("candidatos")
+      .select("id_organizacion_politica,organizacion_politica_nombre")
+      .eq("id_proceso_electoral", ID_PROCESO)
+      .eq("numero_candidato", 1)
+      .neq("estado", "EXCLUIDO"),
   ]);
 
   // ── Manejo de errores ──────────────────────────────────────────────────────
@@ -283,28 +351,28 @@ export async function getDatosSimulador(
   if (parlamentoAndinoResult.error) {
     console.error("[candidatos-service] parlamentoAndino:", parlamentoAndinoResult.error.message);
   }
+  if (todasOrgsResult.error) {
+    console.error("[candidatos-service] todasOrgs:", todasOrgsResult.error.message);
+  }
 
-  // ── Construir mapa global id_org → numero_lista (secuencial 1-based) ────────
-  // Recopilar todos los id_organizacion_politica de todas las queries,
-  // ordenar por id (estable), asignar índice 1-based.
-  // Esto garantiza que el mismo partido tenga el mismo número en todas las columnas.
-  const todasLasRows = [
-    ...(presidentes.data ?? []),
-    ...(senadoresNac.data ?? []),
-    ...(senadoresReg.data ?? []),
-    ...(diputadosResult.data ?? []),
-    ...(parlamentoAndinoResult.data ?? []),
-  ] as unknown as CandidatoRow[];
+  // ── Construir mapa global id_org → posición_onpe ──────────────────────────
+  // Usamos el orden oficial del sorteo ONPE (12-feb-2026).
+  // Para partidos no contemplados en el sorteo (edge case), les asignamos
+  // posición 999 para que aparezcan al final sin romper el orden.
+  // todasOrgsResult se sigue usando para detectar partidos no mapeados.
+  const todasLasRows = (todasOrgsResult.data ?? []) as unknown as CandidatoRow[];
 
-  const idsOrg = [...new Set(
+  const idsEnBD = [...new Set(
     todasLasRows
       .map((r) => r.id_organizacion_politica)
       .filter((id): id is number => id !== null && id !== undefined)
-  )].sort((a, b) => a - b);
+  )];
 
-  // Mapa: id_organizacion_politica → numero_lista (1, 2, 3, ...)
+  // Mapa: id_organizacion_politica → posición en cédula (según sorteo ONPE)
   const mapaNumeros = new Map<number, number>();
-  idsOrg.forEach((id, idx) => mapaNumeros.set(id, idx + 1));
+  for (const id of idsEnBD) {
+    mapaNumeros.set(id, ORDEN_ONPE[id] ?? 999);
+  }
 
   // ── Construir fórmulas presidenciales ──────────────────────────────────────
   const rowsPresidentes = (presidentes.data ?? []) as unknown as CandidatoRow[];

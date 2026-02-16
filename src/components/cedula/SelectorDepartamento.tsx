@@ -52,15 +52,36 @@ export function SelectorDepartamento({ departamentoActual }: Props) {
     }
   }
 
+  const sinDepartamento = !departamentoActual;
+
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-5 max-w-3xl mx-auto bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-      <span className="text-sm font-semibold text-gray-700 whitespace-nowrap">
-        📍 Tu circunscripción:
-      </span>
+    <div
+      className={`
+        flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-5
+        max-w-3xl mx-auto rounded-xl p-3 border
+        ${sinDepartamento
+          ? "bg-red-50 border-red-300 animate-pulse-once"
+          : "bg-green-50 border-green-300"
+        }
+      `}
+    >
+      <div className="flex items-center gap-2 whitespace-nowrap">
+        <span className="text-lg">{sinDepartamento ? "📍" : "✅"}</span>
+        <span className={`text-sm font-bold ${sinDepartamento ? "text-red-700" : "text-green-700"}`}>
+          {sinDepartamento ? "Paso 1: Elige tu departamento" : departamentoActual}
+        </span>
+      </div>
       <select
         value={departamentoActual ?? ""}
         onChange={handleChange}
-        className="w-full sm:w-auto flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent"
+        className={`
+          w-full sm:w-auto flex-1 text-sm rounded-lg px-3 py-2 bg-white
+          focus:outline-none focus:ring-2 focus:border-transparent
+          ${sinDepartamento
+            ? "border-2 border-red-400 text-gray-700 focus:ring-red-500"
+            : "border border-green-300 text-gray-800 focus:ring-green-500"
+          }
+        `}
       >
         <option value="">— Elige tu departamento —</option>
         {DEPARTAMENTOS.map((dep) => (
@@ -69,10 +90,9 @@ export function SelectorDepartamento({ departamentoActual }: Props) {
           </option>
         ))}
       </select>
-      {!departamentoActual && (
-        <p className="text-xs text-yellow-700 sm:hidden">
-          Elige tu departamento para ver los candidatos de Senadores Regionales
-          y Diputados de tu circunscripción.
+      {sinDepartamento && (
+        <p className="text-xs text-red-600 font-medium">
+          Necesario para ver Senadores Regionales y Diputados de tu circunscripción
         </p>
       )}
     </div>

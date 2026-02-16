@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Voto Seguro 2026 — Aprende a votar correctamente",
     description:
-      "Simulador educativo gratuito de cédula de sufragio para las Elecciones Generales del Perú — 13 de abril de 2026. 5 columnas: Presidencial, Senadores, Diputados y Parlamento Andino.",
+      "Simulador educativo gratuito de cédula de sufragio para las Elecciones Generales del Perú — 12 de abril de 2026. 5 columnas: Presidencial, Senadores, Diputados y Parlamento Andino.",
     type: "website",
     locale: "es_PE",
     url: APP_URL,
