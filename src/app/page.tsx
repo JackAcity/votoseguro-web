@@ -50,7 +50,7 @@ export default function HomePage() {
             </p>
             <CountdownElecciones />
             <p className="text-xs text-red-300 mt-2 font-medium">
-              Domingo 13 de abril de 2026 · 8:00 AM – 4:00 PM
+              Domingo 12 de abril de 2026 · 8:00 AM – 4:00 PM
             </p>
           </div>
 
@@ -315,7 +315,7 @@ export default function HomePage() {
           </h2>
           <p className="text-red-100 mb-8 text-base sm:text-lg">
             Usa nuestro simulador con los candidatos reales del JNE y llega preparado
-            el <strong className="text-yellow-300">13 de abril de 2026</strong>.
+            el <strong className="text-yellow-300">12 de abril de 2026</strong>.
           </p>
           <Link
             href="/simulador"

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 
-// Domingo 13 de abril de 2026 a las 8:00 AM (hora Perú, UTC-5)
-const FECHA_ELECCIONES = new Date("2026-04-13T08:00:00-05:00");
+// Domingo 12 de abril de 2026 a las 8:00 AM (hora Perú, UTC-5)
+const FECHA_ELECCIONES = new Date("2026-04-12T08:00:00-05:00");
 
 interface TimeLeft {
   dias: number;

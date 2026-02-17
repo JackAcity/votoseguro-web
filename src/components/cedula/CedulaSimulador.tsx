@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ColumnaElectoral } from "./ColumnaElectoral";
 import { ResultadoVoto } from "./ResultadoVoto";
+import { TutorialOnboarding } from "./TutorialOnboarding";
 import { useCedula } from "@/hooks/useCedula";
 import { CONFIG_COLUMNAS } from "@/lib/cedula-logic";
 import { initSesion, registrarIntencionVoto } from "@/lib/analytics";
@@ -162,6 +163,9 @@ export function CedulaSimulador({ datos }: Props) {
 
   return (
     <div className="max-w-full">
+      {/* Tutorial onboarding (solo primera visita) */}
+      <TutorialOnboarding />
+
       {/* ── CÉDULA OFICIAL ── */}
       <div className="rounded-lg overflow-hidden border-2 border-gray-500 shadow-xl">
 
@@ -188,7 +192,7 @@ export function CedulaSimulador({ datos }: Props) {
             CÉDULA DE SUFRAGIO
           </p>
           <p className="text-[9px] sm:text-[10px] font-semibold text-gray-600 uppercase tracking-wide">
-            ELECCIONES GENERALES — 13 DE ABRIL DE 2026
+            ELECCIONES GENERALES — 12 DE ABRIL DE 2026
           </p>
           <p className="text-[8px] sm:text-[9px] text-gray-400 mt-0.5">
             Simulador educativo — No es cédula oficial ONPE

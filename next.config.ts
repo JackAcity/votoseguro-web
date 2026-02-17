@@ -16,9 +16,9 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://apiplataformaelectoral8.jne.gob.pe",
+      "img-src 'self' data: blob: https://apiplataformaelectoral8.jne.gob.pe https://mpesije.jne.gob.pe https://ixmvqstgbobhqbwxjgjh.supabase.co",
       "font-src 'self'",
-      "connect-src 'self' https://apiplataformaelectoral8.jne.gob.pe",
+      "connect-src 'self' https://apiplataformaelectoral8.jne.gob.pe https://mpesije.jne.gob.pe https://ixmvqstgbobhqbwxjgjh.supabase.co",
       "frame-ancestors 'none'",
     ].join("; "),
   },
@@ -38,6 +38,14 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "apiplataformaelectoral8.jne.gob.pe",
+      },
+      {
+        protocol: "https",
+        hostname: "mpesije.jne.gob.pe",
+      },
+      {
+        protocol: "https",
+        hostname: "ixmvqstgbobhqbwxjgjh.supabase.co",
       },
     ],
   },

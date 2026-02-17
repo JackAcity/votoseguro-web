@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { FilaPartido } from "./FilaPartido";
+import { getLogoPartido } from "@/lib/partidos-logos";
 import type {
   ListaElectoral,
   SeleccionColumna,
@@ -88,73 +90,85 @@ export function ColumnaElectoral({
         {listas.map((lista) => {
           if (esFormula) {
             const isSelected = seleccionFormula === lista.id;
+            const logoUrl = getLogoPartido(lista.organizacion.id);
+            const fotoUrl = lista.presidente?.fotoUrl;
             return (
               <div
                 key={lista.id}
                 className={`
-                  border-b border-gray-200 py-2 px-2 transition-colors cursor-pointer
-                  border-l-2
+                  border-b border-gray-200 transition-colors cursor-pointer
+                  border-l-4
                   ${isSelected
                     ? `bg-yellow-50 ${colors.accent}`
-                    : "border-l-transparent hover:bg-gray-50 hover:border-l-gray-300"
+                    : "border-l-transparent hover:bg-gray-50 hover:border-l-gray-200"
                   }
                 `}
                 onClick={() => onSeleccionarLista(lista.id)}
               >
-                <div className="flex items-start gap-2">
-                  {/* Número de lista */}
-                  <span className="text-[10px] font-black text-gray-400 w-4 shrink-0 text-center mt-0.5">
-                    {lista.organizacion.numeroLista}
-                  </span>
+                <div className="flex items-stretch">
 
-                  {/* Recuadro de aspa */}
-                  <div
-                    className={`
-                      w-7 h-7 border-2 flex items-center justify-center shrink-0 rounded-sm
-                      transition-colors
-                      ${isSelected
-                        ? "border-gray-700 bg-white shadow-sm"
-                        : "border-gray-300 bg-white hover:border-gray-500"
-                      }
-                    `}
-                  >
-                    {isSelected && (
-                      <span
-                        className="text-lg font-black select-none leading-none"
-                        style={{ color: lista.organizacion.colorPrimario }}
+                  {/* Columna izquierda: número + aspa */}
+                  <div className="flex flex-col items-center justify-start pt-2 px-1.5 gap-1 shrink-0">
+                    <span className="text-[9px] font-black text-gray-400 leading-none">
+                      {lista.organizacion.numeroLista}
+                    </span>
+                    <div
+                      className={`
+                        w-7 h-7 border-2 flex items-center justify-center rounded-sm
+                        transition-colors shrink-0
+                        ${isSelected
+                          ? "border-gray-700 bg-white shadow-sm"
+                          : "border-gray-300 bg-white"
+                        }
+                      `}
+                    >
+                      {isSelected && (
+                        <span className="text-base font-black select-none leading-none text-gray-800">
+                          ✗
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Logo del partido */}
+                  <div className="flex items-center justify-center w-10 shrink-0 py-2">
+                    {logoUrl ? (
+                      <div className="relative w-9 h-9 border border-gray-200 rounded-sm overflow-hidden bg-white">
+                        <Image
+                          src={logoUrl}
+                          alt={`Logo ${lista.organizacion.nombre}`}
+                          fill
+                          className="object-contain p-0.5"
+                          unoptimized
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="w-9 h-9 rounded-sm flex items-center justify-center border border-gray-200"
+                        style={{ backgroundColor: lista.organizacion.colorPrimario + "22" }}
                       >
-                        ✗
-                      </span>
+                        <span className="text-[8px] font-black text-gray-600 text-center leading-tight px-0.5">
+                          {lista.organizacion.sigla.slice(0, 3)}
+                        </span>
+                      </div>
                     )}
                   </div>
 
-                  {/* Info partido */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1">
-                      <div
-                        className="w-2 h-2 rounded-sm shrink-0"
-                        style={{ backgroundColor: lista.organizacion.colorPrimario }}
-                      />
-                      <span className="text-[10px] font-black text-gray-800 truncate uppercase leading-tight">
-                        {lista.organizacion.sigla}
-                      </span>
-                    </div>
+                  {/* Info partido + candidato */}
+                  <div className="flex-1 min-w-0 py-1.5 pr-1">
+                    <p className="text-[9px] font-black text-gray-800 uppercase leading-tight line-clamp-2">
+                      {lista.organizacion.nombre}
+                    </p>
                     {lista.presidente && (
                       <div className="mt-0.5">
-                        <p className="text-[10px] font-semibold text-gray-800 leading-tight">
+                        <p className="text-[10px] font-semibold text-gray-700 leading-tight">
                           {lista.presidente.nombres}{" "}
                           {lista.presidente.apellidoPaterno}
                         </p>
                         {lista.vicepresidente1 && (
-                          <p className="text-[9px] text-gray-400 leading-tight">
-                            VP1: {lista.vicepresidente1.nombres}{" "}
+                          <p className="text-[9px] text-gray-400 leading-tight truncate">
+                            VP: {lista.vicepresidente1.nombres}{" "}
                             {lista.vicepresidente1.apellidoPaterno}
-                          </p>
-                        )}
-                        {lista.vicepresidente2 && (
-                          <p className="text-[9px] text-gray-400 leading-tight">
-                            VP2: {lista.vicepresidente2.nombres}{" "}
-                            {lista.vicepresidente2.apellidoPaterno}
                           </p>
                         )}
                         {lista.presidente.estado === "IMPUGNADO" && (
@@ -165,6 +179,25 @@ export function ColumnaElectoral({
                       </div>
                     )}
                   </div>
+
+                  {/* Foto del candidato presidencial */}
+                  {fotoUrl && (
+                    <div className="shrink-0 w-12 self-stretch overflow-hidden bg-gray-100 border-l border-gray-100">
+                      <div className="relative w-full h-full min-h-[64px]">
+                        <Image
+                          src={fotoUrl}
+                          alt={lista.presidente?.nombreCompleto ?? "Candidato"}
+                          fill
+                          className="object-cover object-top"
+                          unoptimized
+                        />
+                        {isSelected && (
+                          <div className="absolute inset-0 bg-yellow-400/20" />
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               </div>
             );

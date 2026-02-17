@@ -6,7 +6,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://votoseguro-web.verce
 export const metadata: Metadata = {
   title: "Guía para el Día de Elecciones — Voto Seguro 2026",
   description:
-    "Todo lo que necesitas saber para votar el domingo 13 de abril de 2026. Qué llevar, cómo encontrar tu local, cómo marcar la cédula y qué evitar.",
+    "Todo lo que necesitas saber para votar el domingo 12 de abril de 2026. Qué llevar, cómo encontrar tu local, cómo marcar la cédula y qué evitar.",
   alternates: {
     canonical: `${APP_URL}/guia`,
   },
@@ -21,7 +21,7 @@ export default function GuiaPage() {
         <div className="inline-flex items-center gap-2 bg-red-50 border border-red-200 rounded-full px-4 py-1.5 mb-4">
           <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse" />
           <span className="text-red-700 text-xs font-bold uppercase tracking-wide">
-            Domingo 13 de abril de 2026
+            Domingo 12 de abril de 2026
           </span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-3">
@@ -322,7 +322,7 @@ export default function GuiaPage() {
         <h2 className="text-xl font-black mb-2">¿Listo para practicar?</h2>
         <p className="text-red-100 text-sm mb-5 max-w-md mx-auto">
           Usa el simulador con los candidatos reales del JNE y llega preparado
-          el <strong className="text-yellow-300">13 de abril de 2026</strong>.
+          el <strong className="text-yellow-300">12 de abril de 2026</strong>.
         </p>
         <Link
           href="/simulador"

@@ -48,7 +48,7 @@ export default async function SimuladorPage({
         </h1>
         <p className="text-gray-500 text-sm max-w-2xl mx-auto">
           Práctica con los candidatos reales del JNE para el{" "}
-          <strong className="text-gray-700">13 de abril de 2026</strong>.
+          <strong className="text-gray-700">12 de abril de 2026</strong>.
           Selecciona un partido en cada columna y verifica si tu voto es válido.
         </p>
       </div>
