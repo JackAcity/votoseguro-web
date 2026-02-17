@@ -9,7 +9,7 @@ export function Header() {
         <div className="max-w-7xl mx-auto flex items-center justify-center sm:justify-between gap-2">
           <span className="hidden sm:flex items-center gap-1.5 text-xs text-red-300">
             <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            Elecciones Generales — Domingo 13 de abril de 2026
+            Elecciones Generales — Domingo 12 de abril de 2026
           </span>
           <CountdownElecciones compact />
         </div>

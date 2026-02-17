@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { MarcaVoto } from "./MarcaVoto";
+import { getLogoPartido } from "@/lib/partidos-logos";
 import type { ListaElectoral, SeleccionColumna } from "@/lib/types";
 
 interface FilaPartidoProps {
@@ -25,6 +27,7 @@ export function FilaPartido({
   const isSelected = seleccion?.idLista === lista.id;
   const prefs = seleccion?.preferencias ?? [];
   const { organizacion } = lista;
+  const logoUrl = getLogoPartido(organizacion.id);
 
   return (
     <div
@@ -37,10 +40,10 @@ export function FilaPartido({
         }
       `}
     >
-      {/* Fila principal: número, marca, nombre del partido */}
-      <div className="flex items-center gap-2">
+      {/* Fila principal: número, marca, logo, nombre del partido */}
+      <div className="flex items-center gap-1.5">
         {/* Número de lista */}
-        <span className="text-[10px] font-black text-gray-400 w-4 shrink-0 text-center">
+        <span className="text-[9px] font-black text-gray-400 w-3.5 shrink-0 text-center">
           {organizacion.numeroLista}
         </span>
 
@@ -52,22 +55,35 @@ export function FilaPartido({
           size="sm"
         />
 
-        {/* Info del partido */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <div
-              className="w-2 h-2 rounded-sm shrink-0"
-              style={{ backgroundColor: organizacion.colorPrimario }}
+        {/* Logo del partido */}
+        {logoUrl ? (
+          <div className="relative w-7 h-7 shrink-0 border border-gray-200 rounded-sm overflow-hidden bg-white">
+            <Image
+              src={logoUrl}
+              alt={`Logo ${organizacion.nombre}`}
+              fill
+              className="object-contain p-0.5"
+              unoptimized
             />
-            <span className="text-[10px] font-black text-gray-800 leading-tight truncate uppercase">
-              {organizacion.sigla}
+          </div>
+        ) : (
+          <div
+            className="w-7 h-7 rounded-sm flex items-center justify-center shrink-0 border border-gray-200"
+            style={{ backgroundColor: organizacion.colorPrimario + "22" }}
+          >
+            <span className="text-[7px] font-black text-gray-600 text-center leading-tight">
+              {organizacion.sigla.slice(0, 2)}
             </span>
           </div>
-          <p className="text-[9px] text-gray-400 leading-tight truncate">
+        )}
+
+        {/* Info del partido */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-black text-gray-800 leading-tight truncate uppercase">
             {organizacion.nombre}
           </p>
 
-          {/* Fórmula presidencial */}
+          {/* Fórmula presidencial (opcional) */}
           {mostrarFormula && lista.presidente && (
             <div className="mt-0.5">
               <p className="text-[10px] font-semibold text-gray-700 leading-tight">
