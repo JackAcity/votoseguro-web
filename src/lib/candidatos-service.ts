@@ -1,13 +1,10 @@
 /**
- * Servicio de candidatos — consume directamente la API JNE.
+ * Servicio de candidatos — lee datos estáticos generados desde Supabase.
  *
- * Endpoint: POST https://web.jne.gob.pe/serviciovotoinformado/api/votoinf/listarCanditatos
- * Body: { idProceso: 124, tipoCandidato: 1 }
+ * Datos generados con: node scripts/generate-static-data.mjs
+ * Fuente: Supabase (8,217 candidatos) — proceso 124 (EG 2026)
  *
- * La respuesta devuelve TODOS los candidatos del proceso en un array plano.
- * Se filtran por idCargo para construir cada columna de la cédula.
- *
- * IDs de cargo (verificados 2026-02-14):
+ * IDs de cargo:
  *   1  → PRESIDENTE DE LA REPÚBLICA
  *   2  → PRIMER VICEPRESIDENTE
  *   3  → SEGUNDO VICEPRESIDENTE
@@ -30,12 +27,12 @@ import type {
   TipoCargo,
 } from "@/lib/types";
 
+// Datos estáticos generados desde Supabase (build time)
+import candidatosData from "@/data/candidatos-eg2026.json";
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Configuración
 // ──────────────────────────────────────────────────────────────────────────────
-
-const JNE_API_URL =
-  "https://web.jne.gob.pe/serviciovotoinformado/api/votoinf/listarCanditatos";
 
 const JNE_FOTO_BASE = "https://mpesije.jne.gob.pe/apidocs";
 
@@ -219,42 +216,15 @@ function agruparEnListas(
 
 /**
  * Obtiene todos los datos necesarios para el simulador de cédula.
- * Hace un único POST a la API JNE y distribuye los candidatos por columna.
+ * Lee del JSON estático generado desde Supabase (sin llamadas externas en runtime).
  *
  * @param departamento - Nombre del departamento en MAYÚSCULAS (ej: "LIMA").
  *   Si es undefined, las columnas regionales devuelven array vacío.
  */
-export async function getDatosSimulador(
+export function getDatosSimulador(
   departamento?: string
-): Promise<DatosSimulador> {
-  // Un único request trae todos los candidatos del proceso
-  const res = await fetch(JNE_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "User-Agent": "VotoSeguro-ETL/1.0 (educational platform)",
-    },
-    body: JSON.stringify({ idProceso: ID_PROCESO, tipoCandidato: 1 }),
-    // Next.js ISR: revalidar cada hora (los datos no cambian con frecuencia)
-    next: { revalidate: 3600 },
-  });
-
-  if (!res.ok) {
-    console.error("[candidatos-service] JNE API error:", res.status, res.statusText);
-    return {
-      formulasPresidenciales: [],
-      senadoresNacionales: [],
-      senadoresRegionales: [],
-      diputados: [],
-      parlamentoAndino: [],
-    };
-  }
-
-  const data = await res.json();
-  const rawList: JNECandidatoRaw[] = Array.isArray(data)
-    ? data
-    : (data?.data ?? []);
+): DatosSimulador {
+  const rawList = candidatosData as JNECandidatoRaw[];
 
   // Filtrar solo proceso 124 y no excluidos
   const activos = rawList.filter(

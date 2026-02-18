@@ -20,9 +20,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Revalidar cada hora — los datos de candidatos no cambian frecuentemente
-export const revalidate = 3600;
-
 export default async function SimuladorPage({
   searchParams,
 }: {
@@ -30,8 +27,8 @@ export default async function SimuladorPage({
 }) {
   const { dep } = await searchParams;
 
-  // Fetch server-side — datos reales de Supabase
-  const datos = await getDatosSimulador(dep);
+  // Datos estáticos en memoria — sin llamada de red
+  const datos = getDatosSimulador(dep);
 
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
