@@ -24,7 +24,7 @@ interface ColumnaElectoralProps {
   seleccion: SeleccionColumna | number | undefined;
   onSeleccionarLista: (idLista: number) => void;
   className?: string;
-  onTogglePreferencial?: (numeroCandidato: number) => void;
+  onSetPreferencial?: (slot: number, numeroCandidato: number | null) => void;
   esFormula?: boolean;
 }
 
@@ -33,7 +33,7 @@ export function ColumnaElectoral({
   listas,
   seleccion,
   onSeleccionarLista,
-  onTogglePreferencial,
+  onSetPreferencial,
   esFormula = false,
   className = "",
 }: ColumnaElectoralProps) {
@@ -209,7 +209,7 @@ export function ColumnaElectoral({
               lista={lista}
               seleccion={seleccionColumna}
               onSeleccionarLista={onSeleccionarLista}
-              onTogglePreferencial={(num) => onTogglePreferencial?.(num)}
+              onSetPreferencial={(slot, num) => onSetPreferencial?.(slot, num)}
               maxPreferenciales={config.maxPreferenciales}
               mostrarFormula={false}
               accentColor={colors.accent}

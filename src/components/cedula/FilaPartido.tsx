@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { MarcaVoto } from "./MarcaVoto";
 import { getLogoPartido } from "@/lib/partidos-logos";
@@ -9,7 +10,7 @@ interface FilaPartidoProps {
   lista: ListaElectoral;
   seleccion: SeleccionColumna | undefined;
   onSeleccionarLista: (idLista: number) => void;
-  onTogglePreferencial: (numeroCandidato: number) => void;
+  onSetPreferencial: (slot: number, numeroCandidato: number | null) => void;
   maxPreferenciales: number;
   mostrarFormula?: boolean;
   accentColor?: string;
@@ -19,7 +20,7 @@ export function FilaPartido({
   lista,
   seleccion,
   onSeleccionarLista,
-  onTogglePreferencial,
+  onSetPreferencial,
   maxPreferenciales,
   mostrarFormula = false,
   accentColor = "border-l-red-700",
@@ -28,6 +29,36 @@ export function FilaPartido({
   const prefs = seleccion?.preferencias ?? [];
   const { organizacion } = lista;
   const logoUrl = getLogoPartido(organizacion.id);
+
+  // Estado local de los inputs (texto que el usuario escribe)
+  const [inputVals, setInputVals] = useState<string[]>(() =>
+    Array.from({ length: maxPreferenciales }, (_, i) =>
+      prefs[i] ? String(prefs[i]) : ""
+    )
+  );
+
+  // Sincronizar inputs cuando cambian las preferencias externas (ej. al resetear)
+  useEffect(() => {
+    setInputVals(
+      Array.from({ length: maxPreferenciales }, (_, i) =>
+        prefs[i] ? String(prefs[i]) : ""
+      )
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSelected, prefs.join(","), maxPreferenciales]);
+
+  const handleInputChange = (slot: number, raw: string) => {
+    // Solo permitir dígitos
+    const cleaned = raw.replace(/\D/g, "").slice(0, 4);
+    const next = [...inputVals];
+    next[slot] = cleaned;
+    setInputVals(next);
+  };
+
+  const handleInputCommit = (slot: number) => {
+    const val = parseInt(inputVals[slot], 10);
+    onSetPreferencial(slot, isNaN(val) || val <= 0 ? null : val);
+  };
 
   return (
     <div
@@ -99,58 +130,49 @@ export function FilaPartido({
         </div>
       </div>
 
-      {/* Candidatos con voto preferencial */}
-      {isSelected && maxPreferenciales > 0 && lista.candidatos.length > 0 && (
-        <div className="mt-2 ml-8 border-t border-yellow-200 pt-1.5">
-          <p className="text-[9px] text-gray-400 mb-1.5 font-medium">
-            Voto preferencial — opcional (máx. {maxPreferenciales}):
+      {/* Inputs de voto preferencial (solo cuando el partido está seleccionado) */}
+      {isSelected && maxPreferenciales > 0 && (
+        <div className="mt-2 ml-8 border-t border-yellow-200 pt-2">
+          <p className="text-[9px] text-gray-400 mb-2 font-medium">
+            Voto preferencial — opcional (escribe el N° del candidato):
           </p>
-          <div className="flex flex-col gap-1">
-            {lista.candidatos.slice(0, 8).map((candidato) => {
-              const seleccionado = prefs.includes(candidato.numeroCandidato);
-              const puedeAgregar = prefs.length < maxPreferenciales || seleccionado;
-
-              return (
-                <button
-                  key={candidato.idHojaVida}
-                  type="button"
-                  onClick={() => onTogglePreferencial(candidato.numeroCandidato)}
-                  disabled={!puedeAgregar && !seleccionado}
-                  aria-pressed={seleccionado}
+          <div className="flex gap-2">
+            {Array.from({ length: maxPreferenciales }).map((_, slot) => (
+              <div key={slot} className="flex flex-col items-center gap-1">
+                <label className="text-[8px] text-gray-400 font-semibold uppercase tracking-wide">
+                  Pref. {slot + 1}
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="N°"
+                  value={inputVals[slot] ?? ""}
+                  onChange={(e) => handleInputChange(slot, e.target.value)}
+                  onBlur={() => handleInputCommit(slot)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.currentTarget.blur();
+                    }
+                  }}
                   className={`
-                    flex items-center gap-2 text-left rounded-md px-2 py-1.5
-                    transition-colors text-[11px] min-h-[40px]
-                    ${seleccionado
-                      ? "bg-yellow-200 text-gray-800 font-semibold border border-yellow-300"
-                      : puedeAgregar
-                      ? "hover:bg-yellow-100 text-gray-600 cursor-pointer border border-transparent hover:border-yellow-200"
-                      : "text-gray-300 cursor-not-allowed border border-transparent"
+                    w-14 h-10 text-center text-sm font-black rounded-md border-2
+                    focus:outline-none focus:ring-2 focus:ring-yellow-400
+                    transition-colors
+                    ${prefs[slot]
+                      ? "border-yellow-400 bg-yellow-50 text-gray-900"
+                      : "border-gray-300 bg-white text-gray-700 placeholder-gray-300"
                     }
                   `}
-                >
-                  <span
-                    className={`
-                      w-6 h-6 flex items-center justify-center rounded text-[10px] font-black shrink-0
-                      border-2
-                      ${seleccionado
-                        ? "bg-yellow-400 border-yellow-500 text-gray-900"
-                        : puedeAgregar
-                        ? "bg-white border-gray-300 text-gray-600"
-                        : "bg-gray-100 border-gray-200 text-gray-300"
-                      }
-                    `}
-                  >
-                    {candidato.numeroCandidato}
-                  </span>
-                  <span className="leading-tight line-clamp-2 flex-1">
-                    {candidato.nombres} {candidato.apellidoPaterno}
-                  </span>
-                  {seleccionado && (
-                    <span className="text-green-600 text-xs shrink-0">✓</span>
-                  )}
-                </button>
-              );
-            })}
+                  aria-label={`Preferencia ${slot + 1} para ${organizacion.nombre}`}
+                />
+                {prefs[slot] ? (
+                  <span className="text-[9px] text-yellow-700 font-bold">#{prefs[slot]}</span>
+                ) : (
+                  <span className="text-[9px] text-gray-300">—</span>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
