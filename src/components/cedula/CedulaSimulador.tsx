@@ -241,7 +241,7 @@ export function CedulaSimulador({ datos }: Props) {
           </div>
 
           {/* Columna activa */}
-          <div className="min-h-[400px] bg-white">
+          <div className="min-h-[70vh] bg-white">
             {renderColumna(TODAS_COLUMNAS[tabActivo])}
           </div>
 

@@ -87,6 +87,15 @@ export function ColumnaElectoral({
 
       {/* Lista de partidos */}
       <div className="flex-1 overflow-y-auto">
+        {/* Aviso cuando no hay candidatos por falta de departamento */}
+        {!esFormula && listas.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full min-h-[200px] px-4 py-8 text-center gap-3">
+            <span className="text-3xl">📍</span>
+            <p className="text-xs font-bold text-gray-500 leading-snug">
+              Selecciona tu departamento arriba para ver los candidatos de esta columna
+            </p>
+          </div>
+        )}
         {listas.map((lista) => {
           if (esFormula) {
             const isSelected = seleccionFormula === lista.id;
@@ -107,11 +116,8 @@ export function ColumnaElectoral({
               >
                 <div className="flex items-stretch">
 
-                  {/* Columna izquierda: número + aspa */}
+                  {/* Columna izquierda: aspa */}
                   <div className="flex flex-col items-center justify-start pt-2 px-1.5 gap-1 shrink-0">
-                    <span className="text-[9px] font-black text-gray-400 leading-none">
-                      {lista.organizacion.numeroLista}
-                    </span>
                     <div
                       className={`
                         w-7 h-7 border-2 flex items-center justify-center rounded-sm
