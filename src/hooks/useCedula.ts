@@ -21,6 +21,12 @@ interface UseCedulaReturn {
     numeroCandidato: number,
     maxPrefs: number
   ) => void;
+  setPreferencial: (
+    columna: keyof Omit<VotoCedula, "formulaPresidencial">,
+    slot: number,
+    numeroCandidato: number | null,
+    maxPrefs: number
+  ) => void;
   resetear: () => void;
   validar: () => ResultadoCedula;
   tiempoInicio: number;
@@ -122,6 +128,43 @@ export function useCedula(): UseCedulaReturn {
     [registrarCambio]
   );
 
+  // Establece un número de candidato en un slot específico (0-based).
+  // Si numeroCandidato es null o <=0, limpia ese slot.
+  const setPreferencial = useCallback(
+    (
+      columna: keyof Omit<VotoCedula, "formulaPresidencial">,
+      slot: number,
+      numeroCandidato: number | null,
+      maxPrefs: number
+    ) => {
+      setVoto((prev) => {
+        const sel = prev[columna];
+        if (!sel) return prev; // No hay lista seleccionada
+
+        // Construir array de longitud maxPrefs (0 = vacío)
+        const prefs: number[] = Array.from({ length: maxPrefs }, (_, i) => sel.preferencias[i] ?? 0);
+
+        if (numeroCandidato === null || numeroCandidato <= 0) {
+          prefs[slot] = 0;
+        } else {
+          // Si el número ya está en otro slot, quitarlo primero
+          for (let i = 0; i < prefs.length; i++) {
+            if (i !== slot && prefs[i] === numeroCandidato) prefs[i] = 0;
+          }
+          prefs[slot] = numeroCandidato;
+        }
+
+        return {
+          ...prev,
+          [columna]: { ...sel, preferencias: prefs.filter((n) => n > 0) },
+        };
+      });
+      registrarCambio();
+      setResultado(null);
+    },
+    [registrarCambio]
+  );
+
   const resetear = useCallback(() => {
     setVoto(VOTO_INICIAL);
     setResultado(null);
@@ -140,6 +183,7 @@ export function useCedula(): UseCedulaReturn {
     seleccionarFormula,
     seleccionarLista,
     togglePreferencial,
+    setPreferencial,
     resetear,
     validar,
     tiempoInicio,

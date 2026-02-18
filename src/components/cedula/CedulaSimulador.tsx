@@ -49,7 +49,7 @@ export function CedulaSimulador({ datos }: Props) {
     resultado,
     seleccionarFormula,
     seleccionarLista,
-    togglePreferencial,
+    setPreferencial,
     resetear,
     validar,
   } = useCedula();
@@ -117,8 +117,8 @@ export function CedulaSimulador({ datos }: Props) {
         listas={COLUMNA_DATOS[ck]}
         seleccion={voto[ck]}
         onSeleccionarLista={(idLista) => seleccionarLista(ck, idLista)}
-        onTogglePreferencial={(num) =>
-          togglePreferencial(ck, num, config.maxPreferenciales)
+        onSetPreferencial={(slot, num) =>
+          setPreferencial(ck, slot, num, config.maxPreferenciales)
         }
         esFormula={false}
         className={className}
