@@ -16,18 +16,27 @@ const TODAS_COLUMNAS: Array<{
   esFormula: boolean;
 }> = [
   { key: "formulaPresidencial", configIdx: 0, esFormula: true },
-  { key: "senadorNacional", configIdx: 1, esFormula: false },
-  { key: "senadorRegional", configIdx: 2, esFormula: false },
-  { key: "diputado", configIdx: 3, esFormula: false },
-  { key: "parlamentoAndino", configIdx: 4, esFormula: false },
+  { key: "senadorNacional",     configIdx: 1, esFormula: false },
+  { key: "senadorRegional",     configIdx: 2, esFormula: false },
+  { key: "diputado",            configIdx: 3, esFormula: false },
+  { key: "parlamentoAndino",    configIdx: 4, esFormula: false },
 ];
 
-const TAB_LABELS: Record<string, { short: string; emoji: string; full: string }> = {
-  formulaPresidencial: { short: "Presidente", emoji: "🏛️", full: "Fórmula Presidencial" },
-  senadorNacional:     { short: "Sen. Nac.", emoji: "🗳️", full: "Senadores Nacionales" },
-  senadorRegional:     { short: "Sen. Reg.", emoji: "📍", full: "Senadores Regionales" },
-  diputado:            { short: "Diputados", emoji: "🏛️", full: "Diputados" },
-  parlamentoAndino:    { short: "Andino", emoji: "🌎", full: "Parlamento Andino" },
+const TAB_LABELS: Record<string, { short: string; emoji: string }> = {
+  formulaPresidencial: { short: "Presidencial", emoji: "🏛️" },
+  senadorNacional:     { short: "Sen. Nacional", emoji: "🗳️" },
+  senadorRegional:     { short: "Sen. Regional", emoji: "📍" },
+  diputado:            { short: "Diputados",     emoji: "🏛️" },
+  parlamentoAndino:    { short: "P. Andino",     emoji: "🌎" },
+};
+
+// Header colours per column
+const HEADER_COLORS: Record<number, string> = {
+  0: "bg-red-800",
+  1: "bg-blue-900",
+  2: "bg-green-900",
+  3: "bg-purple-900",
+  4: "bg-yellow-700",
 };
 
 interface Props {
@@ -55,12 +64,11 @@ export function CedulaSimulador({ datos }: Props) {
   } = useCedula();
 
   const [mostrarResultado, setMostrarResultado] = useState(false);
-  const [tabActivo, setTabActivo] = useState(0);
+  const [columnaActiva, setColumnaActiva] = useState(0);
 
   const handleValidar = () => {
     validar();
     setMostrarResultado(true);
-
     setTimeout(() => {
       document.getElementById("resultado-voto")?.scrollIntoView({
         behavior: "smooth",
@@ -72,7 +80,7 @@ export function CedulaSimulador({ datos }: Props) {
   const handleReintentar = () => {
     resetear();
     setMostrarResultado(false);
-    setTabActivo(0);
+    setColumnaActiva(0);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -91,10 +99,7 @@ export function CedulaSimulador({ datos }: Props) {
     voto.diputado !== undefined ||
     voto.parlamentoAndino !== undefined;
 
-  const renderColumna = (
-    col: (typeof TODAS_COLUMNAS)[number],
-    className = ""
-  ) => {
+  const renderColumna = (col: (typeof TODAS_COLUMNAS)[number], className = "") => {
     const config = CONFIG_COLUMNAS[col.configIdx];
     if (col.esFormula) {
       return (
@@ -126,23 +131,26 @@ export function CedulaSimulador({ datos }: Props) {
     );
   };
 
+  const esUltima = columnaActiva === TODAS_COLUMNAS.length - 1;
+  const headerColor = HEADER_COLORS[columnaActiva] ?? "bg-red-800";
+
   return (
     <div className="max-w-full">
-      {/* Tutorial onboarding (solo primera visita) */}
+      {/* Tutorial */}
       <TutorialOnboarding />
 
-      {/* ── CÉDULA OFICIAL ── */}
-      <div className="rounded-lg overflow-hidden border-2 border-gray-500 shadow-xl">
+      {/* ── CÉDULA ── */}
+      <div className="rounded-lg overflow-hidden border-2 border-gray-400 shadow-xl">
 
-        {/* Franja superior rojo-blanco-rojo (bandera) */}
+        {/* Franja bandera */}
         <div className="flex h-2">
           <div className="flex-1 bg-red-700" />
           <div className="flex-1 bg-white border-y border-gray-300" />
           <div className="flex-1 bg-red-700" />
         </div>
 
-        {/* Header oficial */}
-        <div className="bg-red-700 text-white text-center py-2.5 px-4">
+        {/* Header ONPE */}
+        <div className="bg-red-700 text-white text-center py-2 px-4">
           <h2 className="text-xs sm:text-sm font-black uppercase tracking-widest">
             REPÚBLICA DEL PERÚ
           </h2>
@@ -165,122 +173,108 @@ export function CedulaSimulador({ datos }: Props) {
         </div>
 
         {/* Barra de progreso */}
-        <div className="bg-white border-b border-gray-300 px-3 py-2">
+        <div className="bg-white border-b border-gray-200 px-3 py-2">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-gray-500 font-medium">
-              Progreso del voto
-            </span>
+            <span className="text-[10px] text-gray-500 font-medium">Progreso del voto</span>
             <span className="text-[10px] font-bold text-gray-700">
-              {columnasMarcadas} de 5 columnas marcadas
+              {columnasMarcadas} de 5 columnas
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
             <div
-              className="h-2 rounded-full transition-all duration-500"
+              className="h-1.5 rounded-full transition-all duration-500"
               style={{
                 width: `${progreso}%`,
                 backgroundColor: progreso === 100 ? "#16a34a" : "#dc2626",
               }}
             />
           </div>
-          {/* Indicadores por columna */}
-          <div className="flex gap-1 mt-1.5">
-            {TODAS_COLUMNAS.map((col) => {
+
+          {/* Step dots */}
+          <div className="flex gap-1.5 mt-2">
+            {TODAS_COLUMNAS.map((col, idx) => {
               const marcado = tieneSeleccion(col.key);
+              const activo = columnaActiva === idx;
               const label = TAB_LABELS[col.key];
               return (
-                <div key={col.key} className="flex-1 flex flex-col items-center gap-0.5">
-                  <div
-                    className={`w-full h-1 rounded-full transition-colors ${
-                      marcado ? "bg-green-500" : "bg-gray-200"
-                    }`}
-                  />
-                  <span className="text-[7px] text-gray-400 hidden sm:block truncate text-center w-full">
-                    {label.emoji}
-                  </span>
-                </div>
+                <button
+                  key={col.key}
+                  type="button"
+                  onClick={() => setColumnaActiva(idx)}
+                  className={`
+                    flex-1 flex flex-col items-center gap-0.5 py-1 rounded transition-all
+                    ${activo ? "bg-gray-100 ring-1 ring-gray-300" : "hover:bg-gray-50"}
+                  `}
+                  title={label.short}
+                >
+                  <div className={`w-full h-1.5 rounded-full transition-colors ${
+                    marcado ? "bg-green-500" : activo ? "bg-gray-400" : "bg-gray-200"
+                  }`} />
+                  <span className="text-[7px] text-gray-400 hidden sm:block">{label.emoji}</span>
+                </button>
               );
             })}
           </div>
         </div>
 
-        {/* ── MÓVIL / TABLET (<lg): Tabs + una columna a la vez ── */}
-        <div className="lg:hidden">
-          {/* Tabs */}
-          <div className="flex overflow-x-auto bg-gray-900 scrollbar-hide">
-            {TODAS_COLUMNAS.map((col, idx) => {
-              const label = TAB_LABELS[col.key];
-              const activo = tabActivo === idx;
-              const marcado = tieneSeleccion(col.key);
-              return (
-                <button
-                  key={col.key}
-                  type="button"
-                  onClick={() => setTabActivo(idx)}
-                  className={`
-                    flex-shrink-0 flex flex-col items-center justify-center
-                    px-3 py-2.5 min-w-[68px] text-center transition-all
-                    border-b-2 relative
-                    ${activo
-                      ? "border-yellow-400 bg-gray-700 text-white"
-                      : "border-transparent text-gray-400 hover:text-gray-200 hover:bg-gray-800"
-                    }
-                  `}
-                  aria-selected={activo}
-                >
-                  <span className="text-sm leading-none">{label.emoji}</span>
-                  <span className="text-[8px] mt-0.5 leading-tight whitespace-nowrap">
-                    {label.short}
-                  </span>
-                  {marcado && (
-                    <span className="absolute top-1 right-1.5 w-1.5 h-1.5 bg-green-400 rounded-full" />
-                  )}
-                </button>
-              );
-            })}
+        {/* ── VISTA MÓVIL: una columna a la vez — full screen style ── */}
+        <div className="lg:hidden flex flex-col">
+
+          {/* Active column — fills screen */}
+          <div className="min-h-[75vh] bg-white flex flex-col">
+            {renderColumna(TODAS_COLUMNAS[columnaActiva], "flex-1")}
           </div>
 
-          {/* Columna activa */}
-          <div className="min-h-[70vh] bg-white">
-            {renderColumna(TODAS_COLUMNAS[tabActivo])}
-          </div>
-
-          {/* Navegación anterior/siguiente */}
-          <div className="flex border-t-2 border-gray-300 bg-gray-50">
+          {/* Navigation bar — fixed at bottom of card */}
+          <div className={`flex border-t-2 border-gray-300 ${headerColor}`}>
+            {/* ATRÁS */}
             <button
               type="button"
-              onClick={() => setTabActivo((t) => Math.max(0, t - 1))}
-              disabled={tabActivo === 0}
-              className="flex-1 py-3.5 text-sm font-semibold text-gray-600 hover:bg-gray-100
-                         disabled:opacity-30 disabled:cursor-not-allowed transition-colors
-                         border-r border-gray-300 min-h-[48px]"
+              onClick={() => setColumnaActiva((c) => Math.max(0, c - 1))}
+              disabled={columnaActiva === 0}
+              className="
+                flex-1 py-4 text-sm font-bold text-white/80 hover:text-white
+                hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed
+                transition-colors border-r border-white/20 min-h-[52px]
+              "
             >
-              ← Anterior
+              ← Atrás
             </button>
-            {tabActivo < TODAS_COLUMNAS.length - 1 ? (
+
+            {/* Column indicator */}
+            <div className="flex items-center justify-center px-3 text-white/60 text-[10px] font-semibold shrink-0 select-none">
+              {columnaActiva + 1} / {TODAS_COLUMNAS.length}
+            </div>
+
+            {/* SIGUIENTE / VERIFICAR */}
+            {esUltima ? (
               <button
                 type="button"
-                onClick={() => setTabActivo((t) => Math.min(TODAS_COLUMNAS.length - 1, t + 1))}
-                className="flex-1 py-3.5 text-sm font-semibold text-red-700 hover:bg-red-50
-                           transition-colors min-h-[48px]"
+                onClick={handleValidar}
+                className="
+                  flex-1 py-4 text-sm font-bold text-white bg-green-600
+                  hover:bg-green-700 transition-colors min-h-[52px]
+                "
               >
-                Siguiente →
+                ✓ Verificar
               </button>
             ) : (
               <button
                 type="button"
-                onClick={handleValidar}
-                className="flex-1 py-3.5 text-sm font-bold bg-red-700 text-white
-                           hover:bg-red-800 transition-colors min-h-[48px]"
+                onClick={() => setColumnaActiva((c) => Math.min(TODAS_COLUMNAS.length - 1, c + 1))}
+                className="
+                  flex-1 py-4 text-sm font-bold text-white hover:bg-white/10
+                  transition-colors min-h-[52px]
+                "
               >
-                ✓ Verificar mi voto
+                Siguiente →
               </button>
             )}
           </div>
         </div>
 
-        {/* ── DESKTOP (lg+): 5 columnas completas ── */}
-        <div className="hidden lg:grid lg:grid-cols-5 border-t border-gray-400">
+        {/* ── DESKTOP (lg+): 5 columnas side-by-side ── */}
+        <div className="hidden lg:grid lg:grid-cols-5 border-t border-gray-400 divide-x divide-gray-300">
           {TODAS_COLUMNAS.map((col) => renderColumna(col))}
         </div>
 
@@ -291,7 +285,7 @@ export function CedulaSimulador({ datos }: Props) {
         ⚠ Simulador educativo. Datos referenciales del JNE. La cédula oficial es emitida por la ONPE.
       </p>
 
-      {/* Botones de acción — Desktop */}
+      {/* ── Botones acción DESKTOP ── */}
       <div className="hidden lg:flex gap-3 mt-4 justify-center">
         <button
           type="button"
@@ -315,7 +309,7 @@ export function CedulaSimulador({ datos }: Props) {
         )}
       </div>
 
-      {/* Botones — Móvil */}
+      {/* ── Botones acción MÓVIL ── */}
       {hayAlgunaSeleccion && (
         <div className="lg:hidden flex gap-2 mt-3 px-1">
           <button
