@@ -44,6 +44,7 @@ export interface Candidato {
   // Datos adicionales para perfil
   departamento?: string;
   partido?: string;
+  dni?: string; // strDocumentoIdentidad del JNE
 }
 
 // --- Listas electorales ---
