@@ -166,6 +166,7 @@ function mapCandidato(raw: JNECandidatoRaw, cargo: TipoCargo): Candidato {
     raw.strDocumentoIdentidad && /^\d+$/.test(raw.strDocumentoIdentidad.trim())
       ? parseInt(raw.strDocumentoIdentidad.trim(), 10)
       : 0;
+  const dni = raw.strDocumentoIdentidad?.trim() || undefined;
   return {
     idHojaVida,
     nombres,
@@ -178,6 +179,7 @@ function mapCandidato(raw: JNECandidatoRaw, cargo: TipoCargo): Candidato {
     idOrganizacion: raw.idOrganizacionPolitica,
     estado: (raw.strEstadoCandidato ?? "INSCRITO") as Candidato["estado"],
     departamento: raw.strDepartamento ?? undefined,
+    dni,
   };
 }
 
@@ -309,4 +311,53 @@ export function getDatosSimulador(
     diputados: agruparEnListas(diputados, "DIPUTADO", mapaNumeros),
     parlamentoAndino: agruparEnListas(parlamento, "PARLAMENTO_ANDINO", mapaNumeros),
   };
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Helpers para la página /candidatos
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Devuelve la URL de la hoja de vida en el portal JNE (EG 2026).
+ * @param dni - DNI del candidato (strDocumentoIdentidad)
+ */
+export function getHojaVidaUrl(dni: string): string {
+  return `https://votoinformado.jne.gob.pe/hoja-vida/22/${dni}`;
+}
+
+/**
+ * Devuelve las listas electorales para una cargo determinado.
+ * Para cargos regionales (SENADOR_REGIONAL, DIPUTADO) se filtra por departamento.
+ */
+export function getCandidatosPorCargo(
+  cargo: TipoCargo,
+  departamento?: string
+): ListaElectoral[] {
+  const datos = getDatosSimulador(departamento);
+  switch (cargo) {
+    case "FORMULA_PRESIDENCIAL":
+      return datos.formulasPresidenciales;
+    case "SENADOR_NACIONAL":
+      return datos.senadoresNacionales;
+    case "SENADOR_REGIONAL":
+      return datos.senadoresRegionales;
+    case "DIPUTADO":
+      return datos.diputados;
+    case "PARLAMENTO_ANDINO":
+      return datos.parlamentoAndino;
+    default:
+      return [];
+  }
+}
+
+/** Devuelve todos los departamentos disponibles en el JSON (únicos, ordenados). */
+export function getDepartamentos(): string[] {
+  const rawList = candidatosData as JNECandidatoRaw[];
+  const deps = new Set<string>();
+  for (const r of rawList) {
+    if (r.strDepartamento && r.strUbigeo !== "000000") {
+      deps.add(r.strDepartamento.trim().toUpperCase());
+    }
+  }
+  return Array.from(deps).sort((a, b) => a.localeCompare(b, "es"));
 }
