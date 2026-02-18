@@ -33,62 +33,18 @@ export default async function SimuladorPage({
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
       {/* Header de página */}
-      <div className="text-center mb-5">
-        <div className="inline-flex items-center gap-2 bg-red-50 border border-red-200 rounded-full px-4 py-1.5 mb-3">
-          <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-          <span className="text-red-700 text-xs font-bold uppercase tracking-wide">
-            Simulador Educativo — Elecciones Generales 2026
-          </span>
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">
+      <div className="text-center mb-4">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-1">
           Cédula de Sufragio
         </h1>
-        <p className="text-gray-500 text-sm max-w-2xl mx-auto">
-          Práctica con los candidatos reales del JNE para el{" "}
-          <strong className="text-gray-700">12 de abril de 2026</strong>.
-          Selecciona un partido en cada columna y verifica si tu voto es válido.
+        <p className="text-gray-500 text-sm max-w-xl mx-auto">
+          Practica con los candidatos reales del JNE —{" "}
+          <strong className="text-gray-700">12 de abril de 2026</strong>
         </p>
-      </div>
-
-      {/* Pasos rápidos */}
-      <div className="flex items-center justify-center gap-0 mb-5 max-w-2xl mx-auto overflow-x-auto px-2">
-        {[
-          { paso: "1", texto: "Elige tu departamento", icono: "📍" },
-          { paso: "2", texto: "Selecciona partido en cada columna", icono: "🗳️" },
-          { paso: "3", texto: "Candidatos preferidos (opcional)", icono: "⭐" },
-          { paso: "4", texto: "Verifica tu voto", icono: "✅" },
-        ].map((item, i, arr) => (
-          <div key={item.paso} className="flex items-center shrink-0">
-            <div className="flex flex-col items-center text-center px-2">
-              <div className="w-8 h-8 bg-red-700 text-white rounded-full flex items-center justify-center text-xs font-black mb-1 shadow-sm">
-                {item.paso}
-              </div>
-              <div className="text-[10px] text-gray-500 leading-tight max-w-[70px]">
-                {item.texto}
-              </div>
-            </div>
-            {i < arr.length - 1 && (
-              <div className="w-6 h-px bg-gray-300 shrink-0 mb-4" />
-            )}
-          </div>
-        ))}
       </div>
 
       {/* Selector de departamento */}
       <SelectorDepartamento departamentoActual={dep} />
-
-      {/* Aviso si no hay departamento seleccionado */}
-      {!dep && (
-        <div className="max-w-3xl mx-auto mb-4">
-          <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5">
-            <span className="text-base shrink-0">💡</span>
-            <span>
-              Selecciona tu departamento para ver los candidatos de{" "}
-              <strong>Senadores Regionales</strong> y <strong>Diputados</strong> de tu circunscripción.
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* Simulador principal */}
       <CedulaSimulador datos={datos} />

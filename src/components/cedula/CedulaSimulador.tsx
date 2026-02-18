@@ -22,12 +22,12 @@ const TODAS_COLUMNAS: Array<{
   { key: "parlamentoAndino",    configIdx: 4, esFormula: false },
 ];
 
-const TAB_LABELS: Record<string, { short: string; emoji: string }> = {
-  formulaPresidencial: { short: "Presidencial", emoji: "🏛️" },
-  senadorNacional:     { short: "Sen. Nacional", emoji: "🗳️" },
-  senadorRegional:     { short: "Sen. Regional", emoji: "📍" },
-  diputado:            { short: "Diputados",     emoji: "🏛️" },
-  parlamentoAndino:    { short: "P. Andino",     emoji: "🌎" },
+const TAB_LABELS: Record<string, { short: string; full: string; emoji: string }> = {
+  formulaPresidencial: { short: "Presidencial",  full: "Fórmula Presidencial", emoji: "🏛️" },
+  senadorNacional:     { short: "Sen. Nacional", full: "Senadores Nacionales", emoji: "🗳️" },
+  senadorRegional:     { short: "Sen. Regional", full: "Senadores Regionales", emoji: "📍" },
+  diputado:            { short: "Diputados",     full: "Diputados",            emoji: "🏛️" },
+  parlamentoAndino:    { short: "P. Andino",     full: "Parlamento Andino",    emoji: "🌎" },
 };
 
 // Header colours per column
@@ -133,6 +133,7 @@ export function CedulaSimulador({ datos }: Props) {
 
   const esUltima = columnaActiva === TODAS_COLUMNAS.length - 1;
   const headerColor = HEADER_COLORS[columnaActiva] ?? "bg-red-800";
+  const colActualLabel = TAB_LABELS[TODAS_COLUMNAS[columnaActiva].key];
 
   return (
     <div className="max-w-full">
@@ -143,46 +144,45 @@ export function CedulaSimulador({ datos }: Props) {
       <div className="rounded-lg overflow-hidden border-2 border-gray-400 shadow-xl">
 
         {/* Franja bandera */}
-        <div className="flex h-2">
+        <div className="flex h-2" aria-hidden="true">
           <div className="flex-1 bg-red-700" />
           <div className="flex-1 bg-white border-y border-gray-300" />
           <div className="flex-1 bg-red-700" />
         </div>
 
-        {/* Header ONPE */}
+        {/* Header unificado ONPE — reducido */}
         <div className="bg-red-700 text-white text-center py-2 px-4">
-          <h2 className="text-xs sm:text-sm font-black uppercase tracking-widest">
-            REPÚBLICA DEL PERÚ
-          </h2>
           <p className="text-[9px] sm:text-[10px] text-red-200 tracking-wide">
-            OFICINA NACIONAL DE PROCESOS ELECTORALES — ONPE
+            REPÚBLICA DEL PERÚ — ONPE
           </p>
-        </div>
-
-        {/* Sub-header cédula */}
-        <div className="bg-gray-100 text-center py-1.5 px-4 border-b border-gray-400">
-          <p className="text-[11px] sm:text-xs font-bold text-gray-800 uppercase tracking-widest">
+          <h2 className="text-xs sm:text-sm font-black uppercase tracking-widest leading-tight">
             CÉDULA DE SUFRAGIO
-          </p>
-          <p className="text-[9px] sm:text-[10px] font-semibold text-gray-600 uppercase tracking-wide">
+          </h2>
+          <p className="text-[9px] sm:text-[10px] text-red-200 tracking-wide mt-0.5">
             ELECCIONES GENERALES — 12 DE ABRIL DE 2026
           </p>
-          <p className="text-[8px] sm:text-[9px] text-gray-400 mt-0.5">
-            Simulador educativo — No es cédula oficial ONPE
-          </p>
         </div>
 
-        {/* Barra de progreso */}
-        <div className="bg-white border-b border-gray-200 px-3 py-2">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-gray-500 font-medium">Progreso del voto</span>
-            <span className="text-[10px] font-bold text-gray-700">
-              {columnasMarcadas} de 5 columnas
+        {/* Barra de progreso + steps — WCAG: touch target mínimo 44px */}
+        <div className="bg-white border-b border-gray-300 px-3 pt-2 pb-1">
+          {/* Texto progreso */}
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] text-gray-600 font-semibold">Progreso</span>
+            <span className="text-[11px] font-bold text-gray-800">
+              {columnasMarcadas} / 5 columnas
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
+          {/* Barra */}
+          <div
+            className="w-full bg-gray-200 rounded-full h-2"
+            role="progressbar"
+            aria-valuenow={columnasMarcadas}
+            aria-valuemin={0}
+            aria-valuemax={5}
+            aria-label={`${columnasMarcadas} de 5 columnas completadas`}
+          >
             <div
-              className="h-1.5 rounded-full transition-all duration-500"
+              className="h-2 rounded-full transition-all duration-500"
               style={{
                 width: `${progreso}%`,
                 backgroundColor: progreso === 100 ? "#16a34a" : "#dc2626",
@@ -190,8 +190,8 @@ export function CedulaSimulador({ datos }: Props) {
             />
           </div>
 
-          {/* Step dots */}
-          <div className="flex gap-1.5 mt-2">
+          {/* Step buttons — mínimo 44px de altura (WCAG 2.5.5) */}
+          <div className="flex gap-1 mt-1.5" role="tablist" aria-label="Columnas de la cédula">
             {TODAS_COLUMNAS.map((col, idx) => {
               const marcado = tieneSeleccion(col.key);
               const activo = columnaActiva === idx;
@@ -200,50 +200,68 @@ export function CedulaSimulador({ datos }: Props) {
                 <button
                   key={col.key}
                   type="button"
+                  role="tab"
+                  aria-selected={activo}
+                  aria-label={`${label.full}${marcado ? " — marcado" : ""}`}
                   onClick={() => setColumnaActiva(idx)}
                   className={`
-                    flex-1 flex flex-col items-center gap-0.5 py-1 rounded transition-all
-                    ${activo ? "bg-gray-100 ring-1 ring-gray-300" : "hover:bg-gray-50"}
+                    flex-1 flex flex-col items-center justify-center gap-0.5
+                    min-h-[44px] rounded transition-all
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500
+                    ${activo
+                      ? "bg-gray-100 ring-1 ring-gray-400"
+                      : "hover:bg-gray-50"
+                    }
                   `}
-                  title={label.short}
                 >
                   <div className={`w-full h-1.5 rounded-full transition-colors ${
-                    marcado ? "bg-green-500" : activo ? "bg-gray-400" : "bg-gray-200"
+                    marcado ? "bg-green-500" : activo ? "bg-gray-500" : "bg-gray-300"
                   }`} />
-                  <span className="text-[7px] text-gray-400 hidden sm:block">{label.emoji}</span>
+                  <span className="text-[8px] font-semibold leading-none mt-0.5 text-gray-600 hidden sm:block">
+                    {label.short}
+                  </span>
+                  {marcado && (
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full sm:hidden" aria-hidden="true" />
+                  )}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* ── VISTA MÓVIL: una columna a la vez — full screen style ── */}
+        {/* ── VISTA MÓVIL: una columna a la vez ── */}
         <div className="lg:hidden flex flex-col">
 
-          {/* Active column — fills screen */}
-          <div className="min-h-[75vh] bg-white flex flex-col">
+          {/* Active column */}
+          <div className="min-h-[72vh] bg-white flex flex-col" role="tabpanel">
             {renderColumna(TODAS_COLUMNAS[columnaActiva], "flex-1")}
           </div>
 
-          {/* Navigation bar — fixed at bottom of card */}
-          <div className={`flex border-t-2 border-gray-300 ${headerColor}`}>
+          {/* Navigation bar — WCAG: min-h 52px, nombre columna visible */}
+          <div className={`flex border-t-2 border-white/20 ${headerColor}`}>
             {/* ATRÁS */}
             <button
               type="button"
               onClick={() => setColumnaActiva((c) => Math.max(0, c - 1))}
               disabled={columnaActiva === 0}
+              aria-label="Columna anterior"
               className="
-                flex-1 py-4 text-sm font-bold text-white/80 hover:text-white
-                hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed
+                w-24 shrink-0 py-3.5 text-sm font-bold text-white/80 hover:text-white
+                hover:bg-white/10 disabled:opacity-25 disabled:cursor-not-allowed
                 transition-colors border-r border-white/20 min-h-[52px]
               "
             >
               ← Atrás
             </button>
 
-            {/* Column indicator */}
-            <div className="flex items-center justify-center px-3 text-white/60 text-[10px] font-semibold shrink-0 select-none">
-              {columnaActiva + 1} / {TODAS_COLUMNAS.length}
+            {/* Nombre de la columna activa */}
+            <div className="flex-1 flex flex-col items-center justify-center px-2 select-none">
+              <span className="text-[10px] text-white/50 font-medium leading-none">
+                {columnaActiva + 1} de {TODAS_COLUMNAS.length}
+              </span>
+              <span className="text-[12px] sm:text-sm text-white font-black leading-tight text-center mt-0.5">
+                {colActualLabel.full}
+              </span>
             </div>
 
             {/* SIGUIENTE / VERIFICAR */}
@@ -251,8 +269,9 @@ export function CedulaSimulador({ datos }: Props) {
               <button
                 type="button"
                 onClick={handleValidar}
+                aria-label="Verificar mi voto"
                 className="
-                  flex-1 py-4 text-sm font-bold text-white bg-green-600
+                  w-24 shrink-0 py-3.5 text-sm font-bold text-white bg-green-600
                   hover:bg-green-700 transition-colors min-h-[52px]
                 "
               >
@@ -262,8 +281,9 @@ export function CedulaSimulador({ datos }: Props) {
               <button
                 type="button"
                 onClick={() => setColumnaActiva((c) => Math.min(TODAS_COLUMNAS.length - 1, c + 1))}
+                aria-label={`Ir a ${TAB_LABELS[TODAS_COLUMNAS[columnaActiva + 1]?.key ?? "senadorNacional"].full}`}
                 className="
-                  flex-1 py-4 text-sm font-bold text-white hover:bg-white/10
+                  w-24 shrink-0 py-3.5 text-sm font-bold text-white hover:bg-white/10
                   transition-colors min-h-[52px]
                 "
               >
@@ -280,9 +300,9 @@ export function CedulaSimulador({ datos }: Props) {
 
       </div>
 
-      {/* Nota legal */}
-      <p className="text-[9px] sm:text-[10px] text-gray-400 text-center mt-2 px-2">
-        ⚠ Simulador educativo. Datos referenciales del JNE. La cédula oficial es emitida por la ONPE.
+      {/* Nota legal — contraste mejorado (gris 500 en lugar de 400) */}
+      <p className="text-[10px] text-gray-500 text-center mt-2 px-2">
+        Simulador educativo. Datos referenciales del JNE. La cédula oficial es emitida por la ONPE.
       </p>
 
       {/* ── Botones acción DESKTOP ── */}
@@ -292,17 +312,19 @@ export function CedulaSimulador({ datos }: Props) {
           onClick={handleValidar}
           className="bg-red-700 hover:bg-red-800 text-white font-bold
                      py-3.5 px-10 rounded-lg text-sm transition-colors shadow-md min-h-[48px]
-                     flex items-center gap-2"
+                     flex items-center gap-2
+                     focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
         >
-          <span className="text-base">✓</span>
+          <span className="text-base" aria-hidden="true">✓</span>
           Verificar mi voto
         </button>
         {hayAlgunaSeleccion && (
           <button
             type="button"
             onClick={handleReintentar}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold
-                       py-3.5 px-6 rounded-lg text-sm transition-colors min-h-[48px]"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold
+                       py-3.5 px-6 rounded-lg text-sm transition-colors min-h-[48px]
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
           >
             Borrar todo
           </button>
@@ -317,15 +339,17 @@ export function CedulaSimulador({ datos }: Props) {
             onClick={handleValidar}
             className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold
                        py-3.5 rounded-lg text-sm transition-colors shadow-md min-h-[48px]
-                       flex items-center justify-center gap-2"
+                       flex items-center justify-center gap-2
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
           >
-            <span>✓</span> Verificar mi voto
+            <span aria-hidden="true">✓</span> Verificar mi voto
           </button>
           <button
             type="button"
             onClick={handleReintentar}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold
-                       py-3.5 px-4 rounded-lg text-sm transition-colors min-h-[48px]"
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold
+                       py-3.5 px-4 rounded-lg text-sm transition-colors min-h-[48px]
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500"
           >
             Borrar
           </button>

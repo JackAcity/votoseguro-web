@@ -143,8 +143,8 @@ export function FilaPartido({
                   if (e.key === "Enter") e.currentTarget.blur();
                 }}
                 className={`
-                  w-9 h-9 text-center text-xs font-black rounded border-2
-                  focus:outline-none focus:ring-1 focus:ring-blue-400
+                  w-11 h-11 text-center text-xs font-black rounded border-2
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
                   transition-colors
                   ${!isSelected
                     ? "border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed"
