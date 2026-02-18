@@ -118,6 +118,14 @@ interface JNECandidatoRaw {
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────────
 
+/** Normaliza una cadena: mayúsculas + sin diacríticos (ej. "ÁNCASH" → "ANCASH"). */
+function normalizarDep(s: string): string {
+  return s
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 function buildFotoUrl(guidFoto: string | null | undefined, nombreArchivo: string | null | undefined): string | undefined {
   if (!guidFoto || guidFoto.trim() === "") return undefined;
   // Usar la extensión real del archivo (algunos son .jpg, otros .jpeg)
@@ -240,19 +248,20 @@ export function getDatosSimulador(
   const senadoresNac = activos.filter(
     (r) => r.idCargo === ID_CARGO.SENADOR && r.strUbigeo === "000000"
   );
-  const senadoresReg = departamento
+  const depNorm = departamento ? normalizarDep(departamento) : null;
+  const senadoresReg = depNorm
     ? activos.filter(
         (r) =>
           r.idCargo === ID_CARGO.SENADOR &&
           r.strUbigeo !== "000000" &&
-          r.strDepartamento?.toUpperCase() === departamento.toUpperCase()
+          normalizarDep(r.strDepartamento ?? "") === depNorm
       )
     : [];
-  const diputados = departamento
+  const diputados = depNorm
     ? activos.filter(
         (r) =>
           r.idCargo === ID_CARGO.DIPUTADO &&
-          r.strDepartamento?.toUpperCase() === departamento.toUpperCase()
+          normalizarDep(r.strDepartamento ?? "") === depNorm
       )
     : [];
   const parlamento = activos.filter((r) => r.idCargo === ID_CARGO.PARLAMENTO_ANDINO);
