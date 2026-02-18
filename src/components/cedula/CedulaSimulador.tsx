@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ColumnaElectoral } from "./ColumnaElectoral";
 import { ResultadoVoto } from "./ResultadoVoto";
 import { TutorialOnboarding } from "./TutorialOnboarding";
 import { useCedula } from "@/hooks/useCedula";
 import { CONFIG_COLUMNAS } from "@/lib/cedula-logic";
-import { initSesion, registrarIntencionVoto } from "@/lib/analytics";
 import type { DatosSimulador, VotoCedula } from "@/lib/types";
 
 type ColumnaKey = keyof Omit<VotoCedula, "formulaPresidencial">;
@@ -58,43 +57,9 @@ export function CedulaSimulador({ datos }: Props) {
   const [mostrarResultado, setMostrarResultado] = useState(false);
   const [tabActivo, setTabActivo] = useState(0);
 
-  useEffect(() => {
-    initSesion();
-  }, []);
-
   const handleValidar = () => {
     validar();
     setMostrarResultado(true);
-
-    const selecciones: Parameters<typeof registrarIntencionVoto>[1] = {};
-    if (voto.formulaPresidencial !== undefined) {
-      const lista = DATOS.formulasPresidenciales.find(
-        (f) => f.id === voto.formulaPresidencial
-      );
-      if (lista) {
-        selecciones["formulaPresidencial"] = {
-          nombreOrganizacion: lista.organizacion.nombre,
-          idOrganizacion: lista.organizacion.id,
-          esBlanco: false, esNulo: false, esValido: true,
-        };
-      }
-    }
-    (["senadorNacional", "senadorRegional", "diputado", "parlamentoAndino"] as ColumnaKey[])
-      .forEach((key) => {
-        const sel = voto[key];
-        if (!sel) return;
-        const lista = COLUMNA_DATOS[key]?.find((l) => l.id === sel.idLista);
-        if (lista) {
-          selecciones[key] = {
-            nombreOrganizacion: lista.organizacion.nombre,
-            idOrganizacion: lista.organizacion.id,
-            esBlanco: false, esNulo: false, esValido: true,
-          };
-        }
-      });
-    if (Object.keys(selecciones).length > 0 && resultado) {
-      registrarIntencionVoto(resultado, selecciones);
-    }
 
     setTimeout(() => {
       document.getElementById("resultado-voto")?.scrollIntoView({
