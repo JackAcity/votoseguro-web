@@ -69,7 +69,7 @@ export function FilaPartido({
       onClick={() => onSeleccionarLista(lista.id)}
     >
       {/* Aspa (checkbox) */}
-      <div className="flex items-center justify-center px-2 shrink-0">
+      <div className="flex items-center justify-center px-1.5 lg:px-1 shrink-0">
         <div
           className={`
             w-8 h-8 border-2 flex items-center justify-center rounded-sm
@@ -91,15 +91,15 @@ export function FilaPartido({
 
       {/* Party name */}
       <div className="flex-1 min-w-0 flex items-center py-1 pr-1">
-        <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight line-clamp-4 lg:line-clamp-none">
+        <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight line-clamp-4 lg:line-clamp-none lg:[overflow:visible] lg:whitespace-normal">
           {organizacion.nombre}
         </p>
       </div>
 
       {/* Logo */}
-      <div className="flex items-center justify-center w-12 shrink-0 py-1.5 border-l border-gray-100">
+      <div className="flex items-center justify-center w-12 lg:w-9 shrink-0 py-1.5 border-l border-gray-100">
         {logoUrl ? (
-          <div className="relative w-10 h-10 border border-gray-200 rounded-sm overflow-hidden bg-white">
+          <div className="relative w-10 h-10 lg:w-8 lg:h-8 border border-gray-200 rounded-sm overflow-hidden bg-white">
             <Image
               src={logoUrl}
               alt={`Logo ${organizacion.nombre}`}
@@ -110,7 +110,7 @@ export function FilaPartido({
           </div>
         ) : (
           <div
-            className="w-10 h-10 rounded-sm flex items-center justify-center border border-gray-200"
+            className="w-10 h-10 lg:w-8 lg:h-8 rounded-sm flex items-center justify-center border border-gray-200"
             style={{ backgroundColor: organizacion.colorPrimario + "22" }}
           >
             <span className="text-[8px] font-black text-gray-600 text-center leading-tight px-0.5">
@@ -123,7 +123,7 @@ export function FilaPartido({
       {/* Preferential input boxes — always visible */}
       {maxPreferenciales > 0 && (
         <div
-          className="flex items-center justify-center gap-1.5 px-2 shrink-0 border-l border-gray-100"
+          className="flex items-center justify-center gap-1 lg:gap-0.5 px-1.5 lg:px-1 shrink-0 border-l border-gray-100"
           onClick={(e) => e.stopPropagation()}
         >
           {Array.from({ length: maxPreferenciales }).map((_, slot) => {
@@ -143,7 +143,7 @@ export function FilaPartido({
                   if (e.key === "Enter") e.currentTarget.blur();
                 }}
                 className={`
-                  w-11 h-11 text-center text-xs font-black rounded border-2
+                  w-11 h-11 lg:w-8 lg:h-8 text-center text-[10px] lg:text-[9px] font-black rounded border-2
                   focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
                   transition-colors
                   ${!isSelected
