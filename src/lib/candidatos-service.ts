@@ -120,8 +120,8 @@ interface JNECandidatoRaw {
 
 function buildFotoUrl(guidFoto: string | null | undefined, nombreArchivo: string | null | undefined): string | undefined {
   if (!guidFoto || guidFoto.trim() === "") return undefined;
-  // La extensión viene en strNombre. Si termina en .jpeg usamos jpeg, si no .jpg
-  const ext = nombreArchivo?.endsWith(".jpeg") ? "jpeg" : "jpeg"; // JNE usa .jpeg
+  // Usar la extensión real del archivo (algunos son .jpg, otros .jpeg)
+  const ext = nombreArchivo?.toLowerCase().endsWith(".jpeg") ? "jpeg" : "jpg";
   return `${JNE_FOTO_BASE}/${guidFoto.trim()}.${ext}`;
 }
 
