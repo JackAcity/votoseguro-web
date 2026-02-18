@@ -165,6 +165,9 @@ export function ResultadoVoto({
               const sel = voto[key as keyof typeof voto] as
                 | { idLista: number; preferencias: number[] }
                 | undefined;
+              // Buscar en la lista filtrada. Si no aparece (el usuario cambió de
+              // departamento sin resetear), el partido sigue marcado en el voto — solo
+              // que no podemos mostrar su nombre. Tratamos sel como "marcado" igual.
               const lista = sel ? listaDatos.find((l) => l.id === sel.idLista) : null;
               const estadoColumna = resultado.columnas[key as keyof typeof resultado.columnas];
               const esNulo = estadoColumna?.estado === "nulo";
@@ -180,9 +183,9 @@ export function ResultadoVoto({
                   <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold shrink-0 ${color}`}>
                     {label}
                   </span>
-                  {sel && lista ? (
+                  {sel ? (
                     <span className="text-xs text-gray-700 font-medium flex-1">
-                      {lista.organizacion.sigla}
+                      {lista ? lista.organizacion.sigla : "Partido seleccionado"}
                       {sel.preferencias.length > 0 && (
                         <span className="text-yellow-600 ml-1.5 bg-yellow-100 px-1 rounded text-[9px]">
                           Pref: {sel.preferencias.join(", ")}

@@ -60,7 +60,7 @@ export function FilaPartido({
     <div
       className={`
         flex items-stretch border-b border-gray-200 transition-colors cursor-pointer
-        border-l-4 min-h-[52px]
+        border-l-4 min-h-[52px] lg:min-h-[48px]
         ${isSelected
           ? `bg-blue-50 ${accentColor}`
           : "border-l-transparent hover:bg-gray-50"
@@ -91,7 +91,7 @@ export function FilaPartido({
 
       {/* Party name */}
       <div className="flex-1 min-w-0 flex items-center py-1 pr-1">
-        <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight line-clamp-3">
+        <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight line-clamp-4 lg:line-clamp-none">
           {organizacion.nombre}
         </p>
       </div>
