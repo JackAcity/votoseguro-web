@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ColumnaElectoral } from "./ColumnaElectoral";
 import { ResultadoVoto } from "./ResultadoVoto";
+import { ResumenVotoLateral } from "./ResumenVotoLateral";
 import { TutorialOnboarding } from "./TutorialOnboarding";
 import { useCedula } from "@/hooks/useCedula";
 import { CONFIG_COLUMNAS } from "@/lib/cedula-logic";
@@ -136,7 +137,10 @@ export function CedulaSimulador({ datos }: Props) {
   const colActualLabel = TAB_LABELS[TODAS_COLUMNAS[columnaActiva].key];
 
   return (
-    <div className="max-w-full">
+    <div className="max-w-full lg:grid lg:grid-cols-[1fr_260px] lg:items-start lg:gap-5">
+
+    {/* ── Columna izquierda: cédula + resultado ── */}
+    <div className="min-w-0">
       {/* Tutorial */}
       <TutorialOnboarding />
 
@@ -300,36 +304,10 @@ export function CedulaSimulador({ datos }: Props) {
 
       </div>
 
-      {/* Nota legal — contraste mejorado (gris 500 en lugar de 400) */}
+      {/* Nota legal */}
       <p className="text-[10px] text-gray-500 text-center mt-2 px-2">
         Simulador educativo. Datos referenciales del JNE. La cédula oficial es emitida por la ONPE.
       </p>
-
-      {/* ── Botones acción DESKTOP ── */}
-      <div className="hidden lg:flex gap-3 mt-4 justify-center">
-        <button
-          type="button"
-          onClick={handleValidar}
-          className="bg-red-700 hover:bg-red-800 text-white font-bold
-                     py-3.5 px-10 rounded-lg text-sm transition-colors shadow-md min-h-[48px]
-                     flex items-center gap-2
-                     focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
-        >
-          <span className="text-base" aria-hidden="true">✓</span>
-          Verificar mi voto
-        </button>
-        {hayAlgunaSeleccion && (
-          <button
-            type="button"
-            onClick={handleReintentar}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold
-                       py-3.5 px-6 rounded-lg text-sm transition-colors min-h-[48px]
-                       focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
-          >
-            Borrar todo
-          </button>
-        )}
-      </div>
 
       {/* ── Botones acción MÓVIL ── */}
       {hayAlgunaSeleccion && (
@@ -356,6 +334,22 @@ export function CedulaSimulador({ datos }: Props) {
         </div>
       )}
 
+      {/* ── Botón verificar MÓVIL (cuando no hay selección aún) ── */}
+      {!hayAlgunaSeleccion && (
+        <div className="lg:hidden mt-3 px-1">
+          <button
+            type="button"
+            onClick={handleValidar}
+            className="w-full bg-red-700 hover:bg-red-800 text-white font-bold
+                       py-3.5 rounded-lg text-sm transition-colors shadow-md min-h-[48px]
+                       flex items-center justify-center gap-2
+                       focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+          >
+            <span aria-hidden="true">✓</span> Verificar mi voto
+          </button>
+        </div>
+      )}
+
       {/* Resultado */}
       {mostrarResultado && resultado && (
         <div id="resultado-voto" className="mt-6">
@@ -367,6 +361,18 @@ export function CedulaSimulador({ datos }: Props) {
           />
         </div>
       )}
+    </div>{/* fin columna izquierda */}
+
+    {/* ── Panel lateral DESKTOP ── */}
+    <div className="hidden lg:block pt-0">
+      <ResumenVotoLateral
+        voto={voto}
+        datos={DATOS}
+        onValidar={handleValidar}
+        onBorrar={handleReintentar}
+      />
+    </div>
+
     </div>
   );
 }
