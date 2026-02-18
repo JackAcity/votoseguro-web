@@ -76,11 +76,8 @@ export function FilaPartido({
     >
       <div className="flex items-stretch">
 
-        {/* Columna izquierda: número + aspa */}
-        <div className="flex flex-col items-center justify-start pt-2 px-1.5 gap-1 shrink-0">
-          <span className="text-[9px] font-black text-gray-400 leading-none">
-            {organizacion.numeroLista}
-          </span>
+        {/* Columna izquierda: aspa */}
+        <div className="flex flex-col items-center justify-center pt-2 px-1.5 gap-1 shrink-0">
           <div
             className={`
               w-7 h-7 border-2 flex items-center justify-center rounded-sm
