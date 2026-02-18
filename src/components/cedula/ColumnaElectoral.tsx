@@ -9,13 +9,13 @@ import type {
   ConfigColumna,
 } from "@/lib/types";
 
-// Colores de acento por columna (índice en CONFIG_COLUMNAS)
-const COLUMNA_COLORS: Record<number, { header: string; badge: string; accent: string }> = {
-  0: { header: "bg-red-800",    badge: "bg-red-100 text-red-800",    accent: "border-l-red-700"    },
-  1: { header: "bg-blue-900",   badge: "bg-blue-100 text-blue-800",  accent: "border-l-blue-700"   },
-  2: { header: "bg-green-900",  badge: "bg-green-100 text-green-800",accent: "border-l-green-700"  },
-  3: { header: "bg-purple-900", badge: "bg-purple-100 text-purple-800",accent: "border-l-purple-700"},
-  4: { header: "bg-yellow-700", badge: "bg-yellow-100 text-yellow-800",accent: "border-l-yellow-600"},
+// Accent colours per column index
+const COLUMNA_COLORS: Record<number, { header: string; accent: string; border: string }> = {
+  0: { header: "bg-red-800",    accent: "border-l-red-700",    border: "border-red-700"    },
+  1: { header: "bg-blue-900",   accent: "border-l-blue-700",   border: "border-blue-700"   },
+  2: { header: "bg-green-900",  accent: "border-l-green-700",  border: "border-green-700"  },
+  3: { header: "bg-purple-900", accent: "border-l-purple-700", border: "border-purple-700" },
+  4: { header: "bg-yellow-700", accent: "border-l-yellow-600", border: "border-yellow-600" },
 };
 
 interface ColumnaElectoralProps {
@@ -42,7 +42,7 @@ export function ColumnaElectoral({
     : (seleccion as SeleccionColumna | undefined);
   const seleccionFormula = esFormula ? (seleccion as number | undefined) : undefined;
 
-  // Determinar índice de columna según título para asignar colores
+  // Determine column colour index by title
   const colIdx = config.titulo.toLowerCase().includes("presidencial") ? 0
     : config.titulo.toLowerCase().includes("nacional") ? 1
     : config.titulo.toLowerCase().includes("regional") ? 2
@@ -55,160 +55,173 @@ export function ColumnaElectoral({
     : seleccionColumna !== undefined;
 
   return (
-    <div className={`flex flex-col bg-white border-r border-gray-300 last:border-r-0 min-w-0 ${className}`}>
-      {/* Encabezado de columna */}
-      <div className={`${colors.header} text-white px-2 py-2 text-center`}>
-        <h3 className="text-[10px] sm:text-[11px] font-black uppercase leading-tight tracking-wide">
+    <div className={`flex flex-col bg-white min-w-0 ${className}`}>
+
+      {/* ── Column header ── */}
+      <div className={`${colors.header} text-white px-3 py-2.5 text-center sticky top-0 z-10`}>
+        <h3 className="text-[11px] sm:text-sm font-black uppercase leading-tight tracking-wide">
           {config.titulo}
         </h3>
-        <p className="text-[8px] sm:text-[9px] text-white/70 leading-tight mt-0.5">
+        <p className="text-[9px] sm:text-[10px] text-white/70 leading-tight mt-0.5">
           {config.subtitulo}
         </p>
-        {config.maxPreferenciales > 0 && (
-          <span className={`inline-block mt-1.5 text-[8px] font-bold px-2 py-0.5 rounded-full uppercase ${colors.badge}`}>
-            Hasta {config.maxPreferenciales} pref.
-          </span>
-        )}
-        {/* Indicador de selección */}
         {tieneSeleccion && (
           <div className="mt-1 flex items-center justify-center gap-1">
             <span className="inline-block w-1.5 h-1.5 bg-green-400 rounded-full" />
-            <span className="text-[7px] text-green-300 font-semibold">MARCADO</span>
+            <span className="text-[8px] text-green-300 font-semibold">MARCADO</span>
           </div>
         )}
       </div>
 
-      {/* Instrucción */}
-      <div className="bg-gray-50 px-2 py-1 border-b border-gray-200">
+      {/* ── Table column headers ── */}
+      <div className="flex items-center border-b-2 border-gray-300 bg-gray-100 text-[8px] sm:text-[9px] font-black text-gray-500 uppercase tracking-wide">
+        {/* Aspa */}
+        <div className="w-12 shrink-0 text-center py-1.5">✗</div>
+        {/* Partido */}
+        <div className="flex-1 min-w-0 py-1.5 pl-1">Partido</div>
+        {/* Símbolo */}
+        <div className="w-12 shrink-0 text-center py-1.5 border-l border-gray-200">Símbolo</div>
+        {/* Right column header */}
+        {esFormula ? (
+          <div className="w-14 shrink-0 text-center py-1.5 border-l border-gray-200">Foto</div>
+        ) : config.maxPreferenciales > 0 ? (
+          <div
+            className="shrink-0 text-center py-1.5 border-l border-gray-200"
+            style={{ width: config.maxPreferenciales === 1 ? "52px" : "88px" }}
+          >
+            Pref.
+          </div>
+        ) : null}
+      </div>
+
+      {/* ── Instruction strip ── */}
+      <div className="bg-gray-50 px-3 py-1 border-b border-gray-200">
         <p className="text-[8px] sm:text-[9px] text-gray-500 text-center leading-tight">
           {config.descripcionVoto}
         </p>
       </div>
 
-      {/* Lista de partidos */}
+      {/* ── Rows ── */}
       <div className="flex-1 overflow-y-auto">
-        {/* Aviso cuando no hay candidatos por falta de departamento */}
+
+        {/* Empty state when no department selected */}
         {!esFormula && listas.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full min-h-[200px] px-4 py-8 text-center gap-3">
             <span className="text-3xl">📍</span>
             <p className="text-xs font-bold text-gray-500 leading-snug">
-              Selecciona tu departamento arriba para ver los candidatos de esta columna
+              Selecciona tu departamento para ver los candidatos de esta columna
             </p>
           </div>
         )}
+
         {listas.map((lista) => {
+
+          /* ── FÓRMULA PRESIDENCIAL ── */
           if (esFormula) {
             const isSelected = seleccionFormula === lista.id;
             const logoUrl = getLogoPartido(lista.organizacion.id);
             const fotoUrl = lista.presidente?.fotoUrl;
+
             return (
               <div
                 key={lista.id}
                 className={`
-                  border-b border-gray-200 transition-colors cursor-pointer
-                  border-l-4
+                  flex items-stretch border-b border-gray-200 transition-colors cursor-pointer
+                  border-l-4 min-h-[60px]
                   ${isSelected
-                    ? `bg-yellow-50 ${colors.accent}`
-                    : "border-l-transparent hover:bg-gray-50 hover:border-l-gray-200"
+                    ? `bg-blue-50 ${colors.accent}`
+                    : "border-l-transparent hover:bg-gray-50"
                   }
                 `}
                 onClick={() => onSeleccionarLista(lista.id)}
               >
-                <div className="flex items-stretch">
-
-                  {/* Columna izquierda: aspa */}
-                  <div className="flex flex-col items-center justify-start pt-2 px-1.5 gap-1 shrink-0">
-                    <div
-                      className={`
-                        w-7 h-7 border-2 flex items-center justify-center rounded-sm
-                        transition-colors shrink-0
-                        ${isSelected
-                          ? "border-gray-700 bg-white shadow-sm"
-                          : "border-gray-300 bg-white"
-                        }
-                      `}
-                    >
-                      {isSelected && (
-                        <span className="text-base font-black select-none leading-none text-gray-800">
-                          ✗
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Logo del partido */}
-                  <div className="flex items-center justify-center w-10 shrink-0 py-2">
-                    {logoUrl ? (
-                      <div className="relative w-9 h-9 border border-gray-200 rounded-sm overflow-hidden bg-white">
-                        <Image
-                          src={logoUrl}
-                          alt={`Logo ${lista.organizacion.nombre}`}
-                          fill
-                          className="object-contain p-0.5"
-                          unoptimized
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className="w-9 h-9 rounded-sm flex items-center justify-center border border-gray-200"
-                        style={{ backgroundColor: lista.organizacion.colorPrimario + "22" }}
-                      >
-                        <span className="text-[8px] font-black text-gray-600 text-center leading-tight px-0.5">
-                          {lista.organizacion.sigla.slice(0, 3)}
-                        </span>
-                      </div>
+                {/* Aspa */}
+                <div className="flex items-center justify-center w-12 shrink-0">
+                  <div
+                    className={`
+                      w-8 h-8 border-2 flex items-center justify-center rounded-sm
+                      transition-colors shrink-0
+                      ${isSelected ? "border-blue-700 bg-white shadow-sm" : "border-gray-300 bg-white"}
+                    `}
+                  >
+                    {isSelected && (
+                      <span className="text-lg font-black select-none leading-none text-blue-800">✗</span>
                     )}
                   </div>
+                </div>
 
-                  {/* Info partido + candidato */}
-                  <div className="flex-1 min-w-0 py-1.5 pr-1">
-                    <p className="text-[9px] font-black text-gray-800 uppercase leading-tight line-clamp-2">
-                      {lista.organizacion.nombre}
+                {/* Party name + president */}
+                <div className="flex-1 min-w-0 flex flex-col justify-center py-1.5 pr-1">
+                  <p className="text-[9px] font-black text-gray-800 uppercase leading-tight line-clamp-2">
+                    {lista.organizacion.nombre}
+                  </p>
+                  {lista.presidente && (
+                    <p className="text-[10px] font-semibold text-gray-700 leading-tight mt-0.5">
+                      {lista.presidente.nombres} {lista.presidente.apellidoPaterno}
                     </p>
-                    {lista.presidente && (
-                      <div className="mt-0.5">
-                        <p className="text-[10px] font-semibold text-gray-700 leading-tight">
-                          {lista.presidente.nombres}{" "}
-                          {lista.presidente.apellidoPaterno}
-                        </p>
-                        {lista.vicepresidente1 && (
-                          <p className="text-[9px] text-gray-400 leading-tight truncate">
-                            VP: {lista.vicepresidente1.nombres}{" "}
-                            {lista.vicepresidente1.apellidoPaterno}
-                          </p>
-                        )}
-                        {lista.presidente.estado === "IMPUGNADO" && (
-                          <span className="inline-block bg-red-100 text-red-600 text-[8px] font-bold px-1 rounded mt-0.5">
-                            IMPUGNADO
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  )}
+                  {lista.vicepresidente1 && (
+                    <p className="text-[9px] text-gray-400 leading-tight truncate">
+                      VP: {lista.vicepresidente1.nombres} {lista.vicepresidente1.apellidoPaterno}
+                    </p>
+                  )}
+                  {lista.presidente?.estado === "IMPUGNADO" && (
+                    <span className="inline-block bg-red-100 text-red-600 text-[8px] font-bold px-1 rounded mt-0.5">
+                      IMPUGNADO
+                    </span>
+                  )}
+                </div>
 
-                  {/* Foto del candidato presidencial */}
-                  {fotoUrl && (
-                    <div className="shrink-0 w-12 self-stretch overflow-hidden bg-gray-100 border-l border-gray-100">
-                      <div className="relative w-full h-full min-h-[64px]">
-                        <Image
-                          src={fotoUrl}
-                          alt={lista.presidente?.nombreCompleto ?? "Candidato"}
-                          fill
-                          className="object-cover object-top"
-                          unoptimized
-                        />
-                        {isSelected && (
-                          <div className="absolute inset-0 bg-yellow-400/20" />
-                        )}
-                      </div>
+                {/* Logo (símbolo) */}
+                <div className="flex items-center justify-center w-12 shrink-0 py-2 border-l border-gray-100">
+                  {logoUrl ? (
+                    <div className="relative w-10 h-10 border border-gray-200 rounded-sm overflow-hidden bg-white">
+                      <Image
+                        src={logoUrl}
+                        alt={`Logo ${lista.organizacion.nombre}`}
+                        fill
+                        className="object-contain p-0.5"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="w-10 h-10 rounded-sm flex items-center justify-center border border-gray-200"
+                      style={{ backgroundColor: lista.organizacion.colorPrimario + "22" }}
+                    >
+                      <span className="text-[8px] font-black text-gray-600 text-center leading-tight px-0.5">
+                        {lista.organizacion.sigla.slice(0, 4)}
+                      </span>
                     </div>
                   )}
+                </div>
 
+                {/* Candidate photo */}
+                <div className="shrink-0 w-14 self-stretch overflow-hidden bg-gray-100 border-l border-gray-100">
+                  {fotoUrl ? (
+                    <div className="relative w-full h-full min-h-[60px]">
+                      <Image
+                        src={fotoUrl}
+                        alt={lista.presidente?.nombreCompleto ?? "Candidato"}
+                        fill
+                        className="object-cover object-top"
+                        unoptimized
+                      />
+                      {isSelected && (
+                        <div className="absolute inset-0 bg-blue-400/20" />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-full h-full min-h-[60px] flex items-center justify-center bg-gray-100">
+                      <span className="text-gray-300 text-xl">👤</span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
           }
 
+          /* ── OTRAS COLUMNAS (senadores, diputados, andino) ── */
           return (
             <FilaPartido
               key={lista.id}
@@ -217,7 +230,6 @@ export function ColumnaElectoral({
               onSeleccionarLista={onSeleccionarLista}
               onSetPreferencial={(slot, num) => onSetPreferencial?.(slot, num)}
               maxPreferenciales={config.maxPreferenciales}
-              mostrarFormula={false}
               accentColor={colors.accent}
             />
           );
