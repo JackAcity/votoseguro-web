@@ -76,17 +76,17 @@ export function ColumnaElectoral({
       {/* ── Table column headers ── */}
       <div className="flex items-center border-b-2 border-gray-300 bg-gray-100 text-[8px] sm:text-[9px] font-black text-gray-500 uppercase tracking-wide">
         {/* Aspa */}
-        <div className="w-12 shrink-0 text-center py-1.5">✗</div>
+        <div className="w-11 lg:w-10 shrink-0 text-center py-1.5">✗</div>
         {/* Partido */}
         <div className="flex-1 min-w-0 py-1.5 pl-1">Partido</div>
         {/* Símbolo */}
-        <div className="w-12 shrink-0 text-center py-1.5 border-l border-gray-200">Símbolo</div>
+        <div className="w-12 lg:w-9 shrink-0 text-center py-1.5 border-l border-gray-200">Símbolo</div>
         {/* Right column header */}
         {esFormula ? (
           <div className="w-14 shrink-0 text-center py-1.5 border-l border-gray-200">Foto</div>
         ) : config.maxPreferenciales > 0 ? (
           <div
-            className="shrink-0 text-center py-1.5 border-l border-gray-200"
+            className="shrink-0 text-center py-1.5 border-l border-gray-200 lg:!w-auto"
             style={{ width: config.maxPreferenciales === 1 ? "52px" : "88px" }}
           >
             Pref.
